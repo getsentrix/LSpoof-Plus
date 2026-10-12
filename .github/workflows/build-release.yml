@@ -69,12 +69,12 @@ jobs:
             if [[ "${{ github.ref }}" == refs/tags/* ]]; then
               TAG="${GITHUB_REF#refs/tags/}"
             else
-              TAG="v1.2.7"
+              TAG="v1.2.8"
             fi
           fi
           echo "Using tag: $TAG"
           cat << 'EOF' > notes.md
-          ## LSpoof+ v1.2.7
+          ## LSpoof+ v1.2.8
 
           ### What's New
           - **Status Pill**: Added live status pill on map with tap-to-stop quick action.

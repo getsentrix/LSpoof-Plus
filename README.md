@@ -23,6 +23,16 @@
 
 ---
 
+## What's New in v1.2.8
+
+- **Status Pill**: Map status indicator with tap-to-stop action.
+- **Route Simulation**: Start marker stays fixed while vehicle moves.
+- **Settings**: Fixed saving and live map toggle of 'Show Real Location' option.
+- **Controls**: Restored stop and cancel buttons in location tab and cleaned up speed field toolbar.
+- **3-Finger Hold Gesture**: Hold three fingers anywhere on screen for 0.8s to open the menu.
+
+---
+
 ## What's New in v1.2.7
 
 - **Status Pill**: Map status indicator with tap-to-stop action.
