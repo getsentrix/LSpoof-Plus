@@ -25,7 +25,11 @@
 
 ## What's New in v1.2.7
 
-- **Neumorphic UI**
+- **Status Pill**: Map status indicator with tap-to-stop action.
+- **Route Simulation**: Start marker stays fixed while vehicle moves.
+- **Settings**: Fixed saving of 'Show Real Location' switch.
+- **Controls**: Restored stop and cancel buttons in location tab.
+- **Neumorphic UI**: Soft tactile appearance and dark mode support.
 - **Ad-Hoc Code Signing**: Pre-signed arm64 dylib with 16kb segment alignment for LiveContainer, TrollStore, and Sideloadly compatibility.
 - **3-Finger Hold Gesture**: Hold three fingers anywhere on screen for 0.8s to open the menu.
 

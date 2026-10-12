@@ -575,6 +575,52 @@ static const CGFloat kLSMapHeight = 220.0;
     self.mapSpinner.color = UIColor.systemGrayColor;
     [self.mapContainer addSubview:self.mapSpinner];
 
+    // Status Pill
+    self.statusPill = [[UIView alloc] init];
+    self.statusPill.translatesAutoresizingMaskIntoConstraints = NO;
+    self.statusPill.layer.cornerRadius = 13.0;
+    self.statusPill.layer.cornerCurve = kCACornerCurveContinuous;
+    self.statusPill.clipsToBounds = YES;
+    self.statusPill.userInteractionEnabled = YES;
+    self.statusPill.backgroundColor = [UIColor.secondarySystemBackgroundColor colorWithAlphaComponent:0.92];
+    self.statusPill.layer.borderWidth = 0.5;
+    self.statusPill.layer.borderColor = [UIColor.separatorColor colorWithAlphaComponent:0.3].CGColor;
+    [self.mapContainer addSubview:self.statusPill];
+
+    UITapGestureRecognizer *pillTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleStatusPillTapped)];
+    [self.statusPill addGestureRecognizer:pillTap];
+
+    self.statusStackView = [[UIStackView alloc] init];
+    self.statusStackView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.statusStackView.axis = UILayoutConstraintAxisHorizontal;
+    self.statusStackView.alignment = UIStackViewAlignmentCenter;
+    self.statusStackView.spacing = 6.0;
+    self.statusStackView.userInteractionEnabled = NO;
+    [self.statusPill addSubview:self.statusStackView];
+
+    self.statusDot = [[UIView alloc] init];
+    self.statusDot.translatesAutoresizingMaskIntoConstraints = NO;
+    self.statusDot.layer.cornerRadius = 4.0;
+    self.statusDot.layer.cornerCurve = kCACornerCurveContinuous;
+    self.statusDot.clipsToBounds = YES;
+    self.statusDot.backgroundColor = UIColor.systemOrangeColor;
+    [self.statusStackView addArrangedSubview:self.statusDot];
+
+    self.statusLabel = [[UILabel alloc] init];
+    self.statusLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.statusLabel.font = [UIFont systemFontOfSize:12.0 weight:UIFontWeightMedium];
+    self.statusLabel.textColor = UIColor.labelColor;
+    self.statusLabel.text = @"Spoofing inactive";
+    [self.statusStackView addArrangedSubview:self.statusLabel];
+
+    self.pillStopLabel = [[UILabel alloc] init];
+    self.pillStopLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.pillStopLabel.font = [UIFont systemFontOfSize:12.0 weight:UIFontWeightBold];
+    self.pillStopLabel.textColor = UIColor.systemRedColor;
+    self.pillStopLabel.text = @"· Stop";
+    self.pillStopLabel.hidden = YES;
+    [self.statusStackView addArrangedSubview:self.pillStopLabel];
+
     // Floating Search Suggestions Overlay
     self.suggestionsPanel = [[UIView alloc] init];
     self.suggestionsPanel.translatesAutoresizingMaskIntoConstraints = NO;
@@ -686,6 +732,18 @@ static const CGFloat kLSMapHeight = 220.0;
 
         [self.mapSpinner.centerXAnchor constraintEqualToAnchor:self.mapContainer.centerXAnchor],
         [self.mapSpinner.centerYAnchor constraintEqualToAnchor:self.mapContainer.centerYAnchor],
+
+        [self.statusDot.widthAnchor constraintEqualToConstant:8.0],
+        [self.statusDot.heightAnchor constraintEqualToConstant:8.0],
+
+        [self.statusStackView.leadingAnchor constraintEqualToAnchor:self.statusPill.leadingAnchor constant:10.0],
+        [self.statusStackView.trailingAnchor constraintEqualToAnchor:self.statusPill.trailingAnchor constant:-10.0],
+        [self.statusStackView.topAnchor constraintEqualToAnchor:self.statusPill.topAnchor constant:4.0],
+        [self.statusStackView.bottomAnchor constraintEqualToAnchor:self.statusPill.bottomAnchor constant:-4.0],
+
+        [self.statusPill.topAnchor constraintEqualToAnchor:self.mapContainer.topAnchor constant:10.0],
+        [self.statusPill.leadingAnchor constraintEqualToAnchor:self.mapContainer.leadingAnchor constant:10.0],
+        [self.statusPill.heightAnchor constraintEqualToConstant:26.0],
 
         [self.suggestionsPanel.topAnchor constraintEqualToAnchor:self.mapContainer.topAnchor constant:4.0],
         [self.suggestionsPanel.leadingAnchor constraintEqualToAnchor:self.mapContainer.leadingAnchor constant:4.0],
@@ -1269,9 +1327,12 @@ static const CGFloat kLSMapHeight = 220.0;
     self.pinAnnotation.title = @"Spoofed location";
     self.pinAnnotation.subtitle = @"Drag to adjust";
 
+    BOOL isRouteMode = (self.coordinateMode == LSMapPickerCoordinateModeRoute || self.panelTab == LSMapPickerPanelTabRoute);
     if (self.hasSelectedCoordinate && CLLocationCoordinate2DIsValid(self.selectedCoordinate) && (self.selectedCoordinate.latitude != 0 || self.selectedCoordinate.longitude != 0)) {
         self.pinAnnotation.coordinate = self.selectedCoordinate;
-        [self.mapView addAnnotation:self.pinAnnotation];
+        if (!isRouteMode) {
+            [self.mapView addAnnotation:self.pinAnnotation];
+        }
         MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(self.selectedCoordinate, 1500.0, 1500.0);
         [self.mapView setRegion:region animated:NO];
     } else {
@@ -1280,7 +1341,9 @@ static const CGFloat kLSMapHeight = 220.0;
             self.selectedCoordinate = userLoc.coordinate;
             self.hasSelectedCoordinate = YES;
             self.pinAnnotation.coordinate = userLoc.coordinate;
-            [self.mapView addAnnotation:self.pinAnnotation];
+            if (!isRouteMode) {
+                [self.mapView addAnnotation:self.pinAnnotation];
+            }
             MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(userLoc.coordinate, 1500.0, 1500.0);
             [self.mapView setRegion:region animated:NO];
             [self syncFieldsFromCoordinate];
@@ -1944,7 +2007,6 @@ static const CGFloat kLSMapHeight = 220.0;
     self.latitudeField.inputAccessoryView = toolbar;
     self.longitudeField.inputAccessoryView = toolbar;
     self.altitudeField.inputAccessoryView = toolbar;
-    self.customSpeedField.inputAccessoryView = toolbar;
 }
 
 - (void)toggleSignForActiveField {
@@ -2061,7 +2123,11 @@ static const CGFloat kLSMapHeight = 220.0;
 
     BOOL active = [[PersistenceManager shared] isSpoofingEnabled] || simulator.isSimulating;
     self.pillStopLabel.hidden = !active;
-    self.statusPill.backgroundColor = active ? [UIColor.systemRedColor colorWithAlphaComponent:0.12] : [UIColor.tertiarySystemFillColor colorWithAlphaComponent:0.9];
+    self.statusPill.backgroundColor = active ? [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
+        return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
+            ? [UIColor colorWithRed:0.35 green:0.08 blue:0.08 alpha:0.85]
+            : [UIColor colorWithRed:1.0 green:0.88 blue:0.88 alpha:0.92];
+    }] : [UIColor.secondarySystemBackgroundColor colorWithAlphaComponent:0.92];
 
     BOOL showReal = [[PersistenceManager shared] isSpoofingEnabled] && [PersistenceManager shared].showRealLocation;
     self.mapView.showsUserLocation = ![[PersistenceManager shared] isSpoofingEnabled] || showReal;
@@ -2074,6 +2140,10 @@ static const CGFloat kLSMapHeight = 220.0;
         UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Stop Spoofing?"
                                                                        message:nil
                                                                 preferredStyle:UIAlertControllerStyleActionSheet];
+        if (sheet.popoverPresentationController) {
+            sheet.popoverPresentationController.sourceView = self.statusPill;
+            sheet.popoverPresentationController.sourceRect = self.statusPill.bounds;
+        }
         __weak typeof(self) weakSelf = self;
         [sheet addAction:[UIAlertAction actionWithTitle:@"Stop" style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction *action) {
             typeof(self) strongSelf = weakSelf;
@@ -2118,6 +2188,7 @@ static const CGFloat kLSMapHeight = 220.0;
     store.fluctuationEnabled = self.fluctuationSwitch.isOn;
     store.fluctuationRadius = round(self.fluctuationRadiusSlider.value);
     store.keepLastSpoof = self.keepLastSpoofSwitch.isOn;
+    store.showRealLocation = self.showRealLocationSwitch.isOn;
     if (self.themeSegmentedControl) {
         NSInteger idx = self.themeSegmentedControl.selectedSegmentIndex;
         store.appearancePreference = (idx == 1) ? LSAppearancePreferenceLight : ((idx == 2) ? LSAppearancePreferenceDark : LSAppearancePreferenceSystem);
@@ -2142,6 +2213,10 @@ static const CGFloat kLSMapHeight = 220.0;
     [[LSRouteSimulator shared] stop];
     [[PersistenceManager shared] clearSpoof];
     [PersistenceManager shared].simulationWasActive = NO;
+    if (self.vehicleAnnotation) {
+        [self.mapView removeAnnotation:self.vehicleAnnotation];
+        self.vehicleAnnotation = nil;
+    }
     [self playSimulationStopHaptic];
     [self updateHeroStatusCell];
     [self refreshStatusPill];
@@ -2243,7 +2318,7 @@ static const CGFloat kLSMapHeight = 220.0;
 - (void)mapView:(MKMapView *)mapView didAddAnnotationViews:(NSArray<MKAnnotationView *> *)views {
     (void)mapView;
     for (MKAnnotationView *view in views) {
-        if (view.annotation == self.pinAnnotation || [view.annotation isKindOfClass:[LSStartAnnotation class]] || [view.annotation isKindOfClass:[LSDestinationAnnotation class]]) {
+        if (view.annotation == self.pinAnnotation || [view.annotation isKindOfClass:[LSStartAnnotation class]] || [view.annotation isKindOfClass:[LSDestinationAnnotation class]] || [view.annotation isKindOfClass:[LSSimulationVehicleAnnotation class]]) {
             view.transform = CGAffineTransformMakeTranslation(0, -28.0);
             view.alpha = 0.5;
             [UIView animateWithDuration:0.42 delay:0 usingSpringWithDamping:0.58 initialSpringVelocity:0.8 options:UIViewAnimationOptionCurveEaseOut animations:^{
@@ -2306,7 +2381,10 @@ static const CGFloat kLSMapHeight = 220.0;
         case 2: return 3; // Latitude, Longitude, Altitude
         case 3: return 1; // Heading slider
         case 4: return self.fluctuationSwitch.isOn ? 5 : 4; // Fluctuation, (Radius Slider), Keep Last, Show Real, Theme
-        case 5: return 1; // Apply / Update Location
+        case 5: {
+            BOOL isSpoofingActive = [[PersistenceManager shared] isSpoofingEnabled] || [LSRouteSimulator shared].isSimulating;
+            return isSpoofingActive ? 3 : 2; // Apply, (Stop if active), Cancel
+        }
         default: return 0;
     }
 }
@@ -2423,7 +2501,10 @@ static const CGFloat kLSMapHeight = 220.0;
         }
 
         case 5: {
-            return self.applyButtonCell;
+            BOOL isSpoofingActive = [[PersistenceManager shared] isSpoofingEnabled] || [LSRouteSimulator shared].isSimulating;
+            if (indexPath.row == 0) return self.applyButtonCell;
+            if (indexPath.row == 1 && isSpoofingActive) return self.stopButtonCell;
+            return self.cancelButtonCell;
         }
 
         default:

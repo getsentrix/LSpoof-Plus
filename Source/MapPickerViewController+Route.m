@@ -8,6 +8,9 @@
 @implementation LSDestinationAnnotation
 @end
 
+@implementation LSSimulationVehicleAnnotation
+@end
+
 @implementation MapPickerViewController (LSRouteUI)
 
 - (void)buildRouteControls {
@@ -452,6 +455,10 @@
         [self.mapView removeAnnotation:self.destinationAnnotation];
         self.destinationAnnotation = nil;
     }
+    if (self.vehicleAnnotation) {
+        [self.mapView removeAnnotation:self.vehicleAnnotation];
+        self.vehicleAnnotation = nil;
+    }
     if (self.routePolyline) {
         [self.mapView removeOverlay:self.routePolyline];
         self.routePolyline = nil;
@@ -669,6 +676,12 @@
     [PersistenceManager shared].simulationWasActive = YES;
 
     [simulator startWithRoute:self.fetchedRoute];
+    if (!self.vehicleAnnotation) {
+        self.vehicleAnnotation = [[LSSimulationVehicleAnnotation alloc] init];
+        self.vehicleAnnotation.title = @"Current Position";
+        [self.mapView addAnnotation:self.vehicleAnnotation];
+    }
+    self.vehicleAnnotation.coordinate = start;
     [self ls_updateRoutePlaybackCell];
     [self refreshStatusPill];
     [self.tableView reloadData];
@@ -697,6 +710,10 @@
     }
     [simulator stop];
     [PersistenceManager shared].simulationWasActive = NO;
+    if (self.vehicleAnnotation) {
+        [self.mapView removeAnnotation:self.vehicleAnnotation];
+        self.vehicleAnnotation = nil;
+    }
     [self playSimulationStopHaptic];
     [self ls_updateRoutePlaybackCell];
     [self refreshStatusPill];
@@ -753,6 +770,13 @@
 
     if (self.pinAnnotation) {
         [self.mapView removeAnnotation:self.pinAnnotation];
+    }
+
+    if (simulator.isSimulating) {
+        self.vehicleAnnotation = [[LSSimulationVehicleAnnotation alloc] init];
+        self.vehicleAnnotation.title = @"Current Position";
+        self.vehicleAnnotation.coordinate = simulator.currentCoordinate;
+        [self.mapView addAnnotation:self.vehicleAnnotation];
     }
 
     self.coordinateMode = LSMapPickerCoordinateModeRoute;
@@ -1018,7 +1042,12 @@
     self.statusDot.backgroundColor = UIColor.systemGreenColor;
 
     self.selectedCoordinate = coordinate;
-    self.startAnnotation.coordinate = coordinate;
+    if (!self.vehicleAnnotation) {
+        self.vehicleAnnotation = [[LSSimulationVehicleAnnotation alloc] init];
+        self.vehicleAnnotation.title = @"Current Position";
+        [self.mapView addAnnotation:self.vehicleAnnotation];
+    }
+    self.vehicleAnnotation.coordinate = coordinate;
     self.pinAnnotation.coordinate = coordinate;
     self.suppressFieldSync = YES;
     self.latitudeField.text = [NSString stringWithFormat:@"%.6f", coordinate.latitude];
@@ -1030,6 +1059,10 @@
 - (void)routeSimulatorDidFinish:(LSRouteSimulator *)simulator {
     (void)simulator;
     [PersistenceManager shared].simulationWasActive = NO;
+    if (self.vehicleAnnotation) {
+        [self.mapView removeAnnotation:self.vehicleAnnotation];
+        self.vehicleAnnotation = nil;
+    }
 
     CLLocationCoordinate2D finalCoord = kCLLocationCoordinate2DInvalid;
     if (self.routePolyline && self.routePolyline.pointCount > 0) {
@@ -1100,6 +1133,21 @@
             view.annotation = annotation;
         }
         view.markerTintColor = UIColor.systemRedColor;
+        return view;
+    }
+
+    if ([annotation isKindOfClass:[LSSimulationVehicleAnnotation class]]) {
+        static NSString * const identifier = @"LSSimulationVehiclePin";
+        MKMarkerAnnotationView *view = (MKMarkerAnnotationView *)[self.mapView dequeueReusableAnnotationViewWithIdentifier:identifier];
+        if (!view) {
+            view = [[MKMarkerAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:identifier];
+            view.canShowCallout = YES;
+            view.draggable = NO;
+            view.glyphImage = [MapPickerViewController systemImageNamedWithFallback:@"car.fill" configuration:nil];
+        } else {
+            view.annotation = annotation;
+        }
+        view.markerTintColor = UIColor.systemBlueColor;
         return view;
     }
 

@@ -34,6 +34,9 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 @interface LSDestinationAnnotation : MKPointAnnotation
 @end
 
+@interface LSSimulationVehicleAnnotation : MKPointAnnotation
+@end
+
 @interface MapPickerViewController () <UIGestureRecognizerDelegate, UITextFieldDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
@@ -138,6 +141,7 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 @property (nonatomic, strong) MKPointAnnotation *pinAnnotation;
 @property (nonatomic, strong, nullable) LSStartAnnotation *startAnnotation;
 @property (nonatomic, strong, nullable) LSDestinationAnnotation *destinationAnnotation;
+@property (nonatomic, strong, nullable) LSSimulationVehicleAnnotation *vehicleAnnotation;
 @property (nonatomic, assign) LSRoutePlacementPhase routePlacementPhase;
 @property (nonatomic, strong, nullable) MKRoute *fetchedRoute;
 @property (nonatomic, strong, nullable) MKPolyline *routePolyline;
@@ -177,6 +181,7 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 - (void)handleButtonTouchUp:(UIButton *)sender;
 - (void)refreshNeumorphicColors;
 - (void)refreshStatusPill;
+- (void)handleStatusPillTapped;
 - (void)syncFieldsFromCoordinate;
 - (void)updateCoordinateLabel;
 - (void)movePinToCoordinate:(CLLocationCoordinate2D)coordinate animated:(BOOL)animated;
