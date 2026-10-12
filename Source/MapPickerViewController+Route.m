@@ -432,9 +432,14 @@
         if (![[LSRouteSimulator shared] isSimulating]) {
             [self ls_clearRouteAnnotationsAndOverlay];
             self.mapHintLabel.text = @"  Tap map or drag pin  ";
-        }
-        if (self.pinAnnotation && self.mapConfigured) {
-            [self.mapView addAnnotation:self.pinAnnotation];
+            if (self.pinAnnotation && self.mapConfigured && ![self.mapView.annotations containsObject:self.pinAnnotation]) {
+                [self.mapView addAnnotation:self.pinAnnotation];
+            }
+        } else {
+            if (self.pinAnnotation) {
+                [self.mapView removeAnnotation:self.pinAnnotation];
+            }
+            self.mapHintLabel.text = @"  Simulation in progress  ";
         }
     }
 
@@ -707,6 +712,8 @@
     CLLocationCoordinate2D coord = simulator.currentCoordinate;
     if (CLLocationCoordinate2DIsValid(coord)) {
         [[PersistenceManager shared] setSpoofCoordinate:coord enabled:YES];
+        self.selectedCoordinate = coord;
+        [self syncFieldsFromCoordinate];
     }
     [simulator stop];
     [PersistenceManager shared].simulationWasActive = NO;
@@ -1079,9 +1086,18 @@
         }
     }
 
+    if (self.coordinateMode == LSMapPickerCoordinateModeStatic) {
+        [self ls_clearRouteAnnotationsAndOverlay];
+        self.mapHintLabel.text = @"  Tap map or drag pin  ";
+        if (self.pinAnnotation && self.mapConfigured && ![self.mapView.annotations containsObject:self.pinAnnotation]) {
+            self.pinAnnotation.coordinate = self.selectedCoordinate;
+            [self.mapView addAnnotation:self.pinAnnotation];
+        }
+    }
+
+    [self refreshStatusPill];
     self.statusLabel.text = @"Route complete";
     [self ls_updateRoutePlaybackCell];
-    [self refreshStatusPill];
     [self.tableView reloadData];
 }
 

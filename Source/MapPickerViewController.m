@@ -416,6 +416,9 @@ static const CGFloat kLSMapHeight = 220.0;
     if (self.cancelButton) {
         [MapPickerViewController refreshNeumorphicStyleForView:self.cancelButton cornerRadius:14.0];
     }
+    if (self.statusPill) {
+        self.statusPill.layer.borderColor = [UIColor.separatorColor colorWithAlphaComponent:0.3].CGColor;
+    }
 
     [self ls_refreshRouteNeumorphicStyles];
     [self ls_refreshBookmarksNeumorphicStyles];
@@ -743,6 +746,7 @@ static const CGFloat kLSMapHeight = 220.0;
 
         [self.statusPill.topAnchor constraintEqualToAnchor:self.mapContainer.topAnchor constant:10.0],
         [self.statusPill.leadingAnchor constraintEqualToAnchor:self.mapContainer.leadingAnchor constant:10.0],
+        [self.statusPill.trailingAnchor constraintLessThanOrEqualToAnchor:self.mapContainer.trailingAnchor constant:-50.0],
         [self.statusPill.heightAnchor constraintEqualToConstant:26.0],
 
         [self.suggestionsPanel.topAnchor constraintEqualToAnchor:self.mapContainer.topAnchor constant:4.0],
@@ -1328,9 +1332,10 @@ static const CGFloat kLSMapHeight = 220.0;
     self.pinAnnotation.subtitle = @"Drag to adjust";
 
     BOOL isRouteMode = (self.coordinateMode == LSMapPickerCoordinateModeRoute || self.panelTab == LSMapPickerPanelTabRoute);
+    BOOL shouldSuppressPin = isRouteMode || [LSRouteSimulator shared].isSimulating;
     if (self.hasSelectedCoordinate && CLLocationCoordinate2DIsValid(self.selectedCoordinate) && (self.selectedCoordinate.latitude != 0 || self.selectedCoordinate.longitude != 0)) {
         self.pinAnnotation.coordinate = self.selectedCoordinate;
-        if (!isRouteMode) {
+        if (!shouldSuppressPin && ![self.mapView.annotations containsObject:self.pinAnnotation]) {
             [self.mapView addAnnotation:self.pinAnnotation];
         }
         MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(self.selectedCoordinate, 1500.0, 1500.0);
@@ -1341,7 +1346,7 @@ static const CGFloat kLSMapHeight = 220.0;
             self.selectedCoordinate = userLoc.coordinate;
             self.hasSelectedCoordinate = YES;
             self.pinAnnotation.coordinate = userLoc.coordinate;
-            if (!isRouteMode) {
+            if (!shouldSuppressPin && ![self.mapView.annotations containsObject:self.pinAnnotation]) {
                 [self.mapView addAnnotation:self.pinAnnotation];
             }
             MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(userLoc.coordinate, 1500.0, 1500.0);
@@ -1681,7 +1686,7 @@ static const CGFloat kLSMapHeight = 220.0;
 }
 
 - (void)handleShowRealLocationToggle {
-    // Draft only — committed when Save Settings is tapped
+    [self refreshStatusPill];
 }
 
 - (void)handleDarkModeToggled:(UISwitch *)sender {
@@ -2129,7 +2134,7 @@ static const CGFloat kLSMapHeight = 220.0;
             : [UIColor colorWithRed:1.0 green:0.88 blue:0.88 alpha:0.92];
     }] : [UIColor.secondarySystemBackgroundColor colorWithAlphaComponent:0.92];
 
-    BOOL showReal = [[PersistenceManager shared] isSpoofingEnabled] && [PersistenceManager shared].showRealLocation;
+    BOOL showReal = [[PersistenceManager shared] isSpoofingEnabled] && (self.showRealLocationSwitch ? self.showRealLocationSwitch.isOn : [PersistenceManager shared].showRealLocation);
     self.mapView.showsUserLocation = ![[PersistenceManager shared] isSpoofingEnabled] || showReal;
     [self updateHeroStatusCell];
 }
