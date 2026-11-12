@@ -3,38 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>LSpoof+ — Change Your iPhone GPS Location</title>
-  <meta name="description" content="Change your iPhone GPS location in any app. Works with Pokémon GO, Tinder, Life360, Find My, and more. No jailbreak.">
+  <title>LSpoof+ — Zero-Tether iOS Location Spoofer Dylib</title>
+  <meta name="description" content="In-process GPS location spoofer for sideloaded iOS apps. 16KB page-aligned arm64 dylib for LiveContainer, TrollStore, and Sideloadly. Zero jailbreak, zero PC tether.">
   <meta name="theme-color" content="#09090b">
-  
+
+  <!-- Open Graph / Meta -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://getsentrix.github.io/LSpoof-Plus/">
-  <meta property="og:title" content="LSpoof+ — Change Your iPhone GPS Location">
-  <meta property="og:description" content="Simple, clean GPS spoofer for iOS apps. Inject into LiveContainer, Sideloadly, or TrollStore.">
+  <meta property="og:title" content="LSpoof+ — GPS Location Spoofer for Sideloaded iOS">
+  <meta property="og:description" content="Native in-app tweak with MapPicker, realistic route simulation, and Gaussian drift. Injects into LiveContainer, TrollStore, and Sideloadly.">
   <meta property="og:image" content="https://raw.githubusercontent.com/getsentrix/LSpoof-Plus/main/docs/assets/icon.png">
-  
+
   <link rel="icon" type="image/png" href="assets/icon.png">
+
+  <!-- Typography: Plus Jakarta Sans for high-end UI headers + Inter for prose + JetBrains Mono for telemetry -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
+      /* Base Color System — Obsidian & Slate (Anti-Fluff Standard) */
       --bg: #09090b;
-      --bg-card: rgba(18, 18, 22, 0.75);
-      --bg-card-hover: rgba(26, 26, 32, 0.9);
+      --bg-surface: #121215;
+      --bg-card: rgba(18, 18, 22, 0.78);
+      --bg-card-hover: rgba(26, 26, 32, 0.92);
+      
       --border: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 255, 255, 0.2);
+      --border-hover: rgba(255, 255, 255, 0.18);
+      
       --text: #f4f4f5;
       --text-muted: #a1a1aa;
       --text-subtle: #71717a;
+      
+      /* Apple iOS Palette Accents */
       --apple-blue: #0a84ff;
+      --apple-blue-glow: rgba(10, 132, 255, 0.25);
       --apple-green: #30d158;
+      --apple-green-glow: rgba(48, 209, 88, 0.35);
       --apple-red: #ff453a;
       --apple-orange: #ff9f0a;
       --apple-purple: #bf5af2;
+      
       --radius-sm: 8px;
       --radius-md: 14px;
       --radius-lg: 20px;
-      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --radius-xl: 32px;
+      
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
 
       /* Neumorphism (Soft UI) Elevation System */
       --nm-bg-dark: #121316;
@@ -43,11 +61,10 @@
       --nm-pressed-dark: inset 3px 3px 6px rgba(0, 0, 0, 0.65), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
       --nm-convex-dark: 6px 6px 14px rgba(0, 0, 0, 0.65), -3px -3px 9px rgba(255, 255, 255, 0.07);
 
-      --nm-bg-light: #e6ecf5;
+      --nm-bg-light: #e8ecf4;
       --nm-surface-light: #eff3f9;
       --nm-flat-light: 5px 5px 12px rgba(163, 177, 198, 0.55), -5px -5px 12px rgba(255, 255, 255, 0.95);
       --nm-pressed-light: inset 3px 3px 6px rgba(163, 177, 198, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.95);
-      --nm-convex-light: 6px 6px 14px rgba(163, 177, 198, 0.6), -6px -6px 14px rgba(255, 255, 255, 0.95);
 
       --spring-apple: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
@@ -57,47 +74,74 @@
       margin: 0;
       padding: 0;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
       background-color: var(--bg);
       color: var(--text);
-      font-family: var(--font-sans);
-      line-height: 1.5;
+      font-family: var(--font-body);
+      line-height: 1.6;
       overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
-        radial-gradient(circle at 100% 40%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
-      background-attachment: fixed;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Atmospheric Lighting Protocols (Section 6 SKILLSET) */
+    .ambient-glow-top {
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      max-width: 1400px;
+      height: 600px;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(10, 132, 255, 0.14) 0%, rgba(191, 90, 242, 0.04) 40%, transparent 70%);
+      filter: blur(50px);
+    }
+
+    .ambient-glow-center {
+      position: fixed;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 900px;
+      height: 600px;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle, rgba(48, 209, 88, 0.035) 0%, transparent 65%);
+      filter: blur(80px);
     }
 
     .bg-grid {
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background-size: 40px 40px;
+      background-size: 48px 48px;
       background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
       z-index: 0;
     }
 
     .container {
       width: 100%;
-      max-width: 1120px;
+      max-width: 1140px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 24px;
       position: relative;
-      z-index: 1;
+      z-index: 10;
     }
 
     /* Header Nav */
     header {
       position: sticky;
       top: 0;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(9, 9, 11, 0.82);
       border-bottom: 1px solid var(--border);
       z-index: 100;
     }
@@ -106,30 +150,43 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 60px;
+      height: 64px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
       color: var(--text);
+      font-family: var(--font-display);
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.12rem;
+      letter-spacing: -0.01em;
     }
 
     .brand img {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
+      border-radius: 9px;
       border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .brand-tag {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 6px;
+      color: var(--text-muted);
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       list-style: none;
     }
 
@@ -146,158 +203,207 @@
     }
 
     .nav-btn {
-      padding: 7px 14px;
+      padding: 7px 16px;
       border-radius: 9999px;
-      background: #ffffff;
-      color: #000000 !important;
-      font-weight: 600 !important;
+      background: #ffffff !important;
+      color: #09090b !important;
+      font-family: var(--font-display);
+      font-weight: 700 !important;
       font-size: 0.82rem !important;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 10px rgba(255,255,255,0.15);
+      transition: transform 0.18s var(--spring-apple), background 0.15s ease !important;
     }
 
-    /* Hero */
+    .nav-btn:hover {
+      background: #e4e4e7 !important;
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section — Strict Anti-Fluff Standard */
     .hero {
-      padding: 60px 0 40px;
+      padding: 72px 0 44px;
       text-align: center;
     }
 
     .tag-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.05);
+      gap: 9px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 9999px;
-      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
       font-weight: 500;
       color: var(--text-muted);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
     }
 
     .tag-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--apple-green);
+      box-shadow: 0 0 8px var(--apple-green);
     }
 
     h1 {
-      font-size: clamp(2rem, 5.5vw, 3.8rem);
+      font-family: var(--font-display);
+      font-size: clamp(2.3rem, 6vw, 4.1rem);
       font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 16px;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      margin-bottom: 20px;
       color: #ffffff;
+      max-width: 920px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .hero-p {
-      font-size: clamp(0.98rem, 1.8vw, 1.15rem);
+      font-size: clamp(1.02rem, 1.9vw, 1.18rem);
       color: var(--text-muted);
-      max-width: 580px;
-      margin: 0 auto 30px;
-      line-height: 1.5;
+      max-width: 660px;
+      margin: 0 auto 34px;
+      line-height: 1.6;
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 40px;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 13px 22px;
+      gap: 9px;
+      padding: 13px 24px;
       border-radius: var(--radius-md);
+      font-family: var(--font-display);
       font-size: 0.92rem;
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
       cursor: pointer;
       border: 1px solid transparent;
-      transition: all 0.15s ease;
+      transition: all 0.2s var(--spring-apple);
     }
 
     .btn-primary {
       background: #ffffff;
-      color: #000000;
+      color: #09090b;
+      box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary:hover {
-      background: #e4e4e7;
-      transform: translateY(-1px);
+      background: #ececee;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(255, 255, 255, 0.22);
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text);
       border-color: var(--border);
+      backdrop-filter: blur(12px);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.09);
       border-color: var(--border-hover);
+      transform: translateY(-1px);
     }
 
-    /* Showcase Layout */
+    .hero-badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .hero-meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-subtle);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .hero-meta-item:hover {
+      color: var(--text-muted);
+    }
+
+    /* Section 2: Interactive Proof Component */
     .showcase-section {
-      padding: 20px 0 80px;
+      padding: 24px 0 84px;
     }
 
     .showcase-wrapper {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 36px;
+      gap: 48px;
       align-items: center;
     }
 
-    @media (min-width: 960px) {
+    @media (min-width: 980px) {
       .showcase-wrapper {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 410px 1fr;
       }
     }
 
-    /* iPhone Mockup */
+    /* iPhone Hardware Enclosure */
     .phone-container {
       position: relative;
       margin: 0 auto;
-      max-width: 380px;
+      max-width: 400px;
       width: 100%;
-      background: #000000;
-      border-radius: 48px;
+      background: linear-gradient(145deg, #27272a, #111113);
+      border-radius: 52px;
       padding: 12px;
-      border: 3.5px solid #27272a;
-      box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.9);
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 24px 60px -12px rgba(0, 0, 0, 0.95),
+        0 0 0 1px rgba(0, 0, 0, 0.8),
+        inset 0 0 8px rgba(255, 255, 255, 0.15);
     }
 
     .phone-screen {
       background: var(--nm-bg-dark);
-      border-radius: 38px;
+      border-radius: 42px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       position: relative;
       font-size: 14px;
       color: #ffffff;
-      min-height: 600px;
+      min-height: 640px;
       display: flex;
       flex-direction: column;
       transition: background 0.35s ease, color 0.35s ease;
     }
 
+    /* Hardware Elements */
     .dynamic-island {
-      width: 100px;
-      height: 26px;
+      width: 108px;
+      height: 27px;
       background: #000000;
-      border-radius: 18px;
+      border-radius: 20px;
       margin: 8px auto 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      z-index: 50;
     }
 
     .island-cam {
@@ -305,6 +411,7 @@
       height: 9px;
       border-radius: 50%;
       background: #18181b;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.8);
     }
 
     .island-dot {
@@ -312,11 +419,12 @@
       height: 7px;
       border-radius: 50%;
       background: var(--apple-green);
+      box-shadow: 0 0 5px var(--apple-green);
     }
 
     .app-sheet {
       flex: 1;
-      padding: 10px 12px 18px;
+      padding: 10px 14px 18px;
       overflow-y: auto;
       scrollbar-width: none;
       background: var(--nm-bg-dark);
@@ -328,23 +436,24 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .app-title-group h3 {
+      font-family: var(--font-display);
       font-size: 1.25rem;
       font-weight: 700;
       line-height: 1.2;
     }
 
     .app-title-group p {
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       color: #8e8e93;
     }
 
     .app-close-btn {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: var(--nm-surface-dark);
       box-shadow: var(--nm-flat-dark);
@@ -361,18 +470,49 @@
       box-shadow: var(--nm-pressed-dark);
     }
 
-    /* Hero Status Card inside Phone */
+    /* Live Telemetry Pill */
+    .telemetry-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: #8e8e93;
+      margin-bottom: 10px;
+    }
+    .telemetry-tag {
+      color: var(--apple-green);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .telemetry-tag::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--apple-green);
+      display: inline-block;
+    }
+
+    /* Master Status Card */
     .hero-status-card {
       background: var(--nm-surface-dark);
       border-radius: 16px;
       padding: 12px 14px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 12px;
       border: 0.5px solid rgba(255, 255, 255, 0.08);
       box-shadow: var(--nm-flat-dark);
       cursor: pointer;
+      user-select: none;
       transition: transform 0.22s var(--spring-apple), box-shadow 0.22s ease, background 0.35s ease;
     }
     .hero-status-card:active {
@@ -402,7 +542,7 @@
 
     @keyframes dotSpringPulse {
       0% { transform: scale(0.8); }
-      50% { transform: scale(1.3); }
+      50% { transform: scale(1.35); }
       100% { transform: scale(1); }
     }
 
@@ -411,6 +551,7 @@
     }
 
     .hero-status-info h4 {
+      font-family: var(--font-display);
       font-size: 0.95rem;
       font-weight: 700;
       line-height: 1.2;
@@ -421,7 +562,7 @@
       color: #8e8e93;
     }
 
-    /* Search Bar: Debossed Recessed Well */
+    /* Search Bar */
     .ios-search {
       background: #0d0e12;
       border-radius: 12px;
@@ -432,18 +573,18 @@
       gap: 8px;
       color: #8e8e93;
       font-size: 0.78rem;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       border: 0.5px solid rgba(255, 255, 255, 0.04);
       box-shadow: var(--nm-pressed-dark);
       transition: all 0.25s ease;
     }
 
-    /* Map Widget: Neumorphic Raised Elevation */
+    /* Interactive Vector Map */
     .ios-map-container {
       width: 100%;
-      height: 140px;
+      height: 154px;
       border-radius: 16px;
-      background: #121214;
+      background: #121316;
       position: relative;
       overflow: hidden;
       border: 0.5px solid rgba(255, 255, 255, 0.08);
@@ -452,14 +593,22 @@
       cursor: crosshair;
       user-select: none;
       background-image: 
-        radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.12) 0%, transparent 70%),
-        linear-gradient(45deg, #18181b 25%, transparent 25%),
-        linear-gradient(-45deg, #18181b 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #18181b 75%),
-        linear-gradient(-45deg, transparent 75%, #18181b 75%);
+        radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.14) 0%, transparent 75%),
+        linear-gradient(45deg, #18191d 25%, transparent 25%),
+        linear-gradient(-45deg, #18191d 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #18191d 75%),
+        linear-gradient(-45deg, transparent 75%, #18191d 75%);
       background-size: 100% 100%, 28px 28px, 28px 28px, 28px 28px, 28px 28px;
       background-position: 0 0, 0 0, 0 14px, 14px -14px, -14px 0px;
-      transition: box-shadow 0.3s ease;
+    }
+
+    /* Map Roads and Water Visuals */
+    .map-svg-grid {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
 
     .map-pin {
@@ -467,9 +616,9 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -100%);
-      width: 24px;
-      height: 24px;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.65));
+      width: 26px;
+      height: 26px;
+      filter: drop-shadow(0 5px 9px rgba(0,0,0,0.7));
       transition: top 0.35s var(--spring-apple), left 0.35s var(--spring-apple);
       pointer-events: none;
       z-index: 10;
@@ -513,9 +662,9 @@
       background: rgba(191, 90, 242, 0.12);
       border-radius: 50%;
       pointer-events: none;
-      width: 44px;
-      height: 44px;
-      transition: width 0.2s ease, height 0.2s ease, top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      width: 48px;
+      height: 48px;
+      transition: width 0.2s ease, height 0.2s ease, top 0.3s var(--spring-apple), left 0.3s var(--spring-apple);
       z-index: 4;
       animation: driftPulse 2.8s ease-in-out infinite;
     }
@@ -527,26 +676,29 @@
 
     .map-hint {
       position: absolute;
-      bottom: 6px;
+      bottom: 8px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(28, 28, 30, 0.9);
-      padding: 2px 8px;
+      background: rgba(18, 18, 22, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 3px 10px;
       border-radius: 20px;
-      font-size: 0.62rem;
-      color: #aeaeb2;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      color: #d4d4d8;
       white-space: nowrap;
       pointer-events: none;
-      transition: color 0.2s ease;
       z-index: 6;
+      backdrop-filter: blur(4px);
     }
 
     .flash-val {
       color: var(--apple-green) !important;
+      font-weight: 700;
       transition: color 0.1s ease;
     }
 
-    /* Segment Control: Debossed Well Tray with Embossed Pill Thumb */
+    /* Segment Control */
     .ios-segment {
       display: flex;
       background: #0d0e12;
@@ -559,15 +711,16 @@
 
     .ios-segment-btn {
       flex: 1;
-      padding: 6px 0;
+      padding: 7px 0;
       border-radius: 9px;
       border: none;
       background: transparent;
       color: #8e8e93;
-      font-size: 0.74rem;
+      font-family: var(--font-display);
+      font-size: 0.76rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.28s var(--spring-apple);
+      transition: all 0.25s var(--spring-apple);
     }
 
     .ios-segment-btn.active {
@@ -576,7 +729,7 @@
       box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.45), -1px -1px 4px rgba(255, 255, 255, 0.08);
     }
 
-    /* Inset Group: Neumorphic Elevated Card */
+    /* Inset Group Cards */
     .inset-group {
       background: var(--nm-surface-dark);
       border-radius: 16px;
@@ -600,6 +753,15 @@
       border-bottom: none;
     }
 
+    .inset-row.interactive {
+      cursor: pointer;
+    }
+
+    .inset-row.interactive:active {
+      transform: scale(0.985);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
     .sf-badge {
       width: 24px;
       height: 24px;
@@ -621,7 +783,7 @@
       font-size: 0.82rem;
       font-weight: 500;
       color: #ffffff;
-      width: 85px;
+      width: 88px;
       flex-shrink: 0;
     }
 
@@ -634,7 +796,7 @@
       outline: none;
       background: #0d0e12;
       border-radius: 8px;
-      padding: 4px 8px;
+      padding: 5px 8px;
       border: 0.5px solid rgba(255, 255, 255, 0.04);
       box-shadow: var(--nm-pressed-dark);
       transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.35s ease;
@@ -646,7 +808,7 @@
 
     /* iOS Switch */
     .ios-switch {
-      width: 40px;
+      width: 42px;
       height: 24px;
       background: #39393d;
       border-radius: 20px;
@@ -668,15 +830,15 @@
       position: absolute;
       top: 2px;
       left: 2px;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s var(--spring-apple);
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
     .ios-switch.on .ios-switch-knob {
-      transform: translateX(16px);
+      transform: translateX(18px);
     }
 
-    /* Drift Radius Slider Row inside Phone */
+    /* Slider Row */
     .slider-row {
       display: flex;
       flex-direction: column;
@@ -703,139 +865,16 @@
       cursor: pointer;
     }
 
-    /* Showcase Text Right Side */
-    .showcase-info h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 14px;
-    }
-
-    .showcase-info p {
-      color: var(--text-muted);
-      font-size: 0.98rem;
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
-
-    .feature-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .feature-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .feature-item:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-hover);
-    }
-
-    .feature-item h4 {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .feature-item p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 0;
-    }
-
-    /* Installation Card */
-    .source-card, .install-card {
-      margin: 40px 0 60px;
-      background: #121214;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 30px;
-      transition: border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .source-card:hover, .install-card:hover {
-      border-color: var(--border-hover);
-      box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.7);
-    }
-
-    .source-top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .source-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .source-brand img {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    .source-brand h3 {
-      font-size: 1.35rem;
-      font-weight: 700;
-    }
-
-    .source-brand p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .source-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    /* Tactile Micro-Interactions */
-    .btn {
-      transition: transform 0.18s var(--spring-apple), box-shadow 0.18s ease;
-    }
-    .btn:active {
-      transform: scale(0.96) !important;
-      box-shadow: var(--nm-pressed-dark) !important;
-    }
-
-    .inset-row {
-      transition: background 0.15s ease, transform 0.15s var(--spring-apple);
-    }
-
-    .inset-row.interactive {
-      cursor: pointer;
-    }
-
-    .inset-row.interactive:active {
-      transform: scale(0.985);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    /* Tab Transition: Spring Physics */
     .tab-content {
       animation: tabSpringEnter 0.35s var(--spring-apple);
     }
 
     @keyframes tabSpringEnter {
       from { opacity: 0; transform: translateY(8px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Phone Light Theme Toggle: Neumorphic Soft UI */
+    /* Phone Light Theme Toggle */
     .phone-screen.phone-light-theme {
       background: var(--nm-bg-light) !important;
       color: #1c1c1e !important;
@@ -878,47 +917,390 @@
       color: #1c1c1e !important;
       box-shadow: 2px 2px 6px rgba(163, 177, 198, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.95) !important;
     }
-    .phone-screen.phone-light-theme .ios-map-container {
-      box-shadow: var(--nm-flat-light) !important;
-      border-color: rgba(255, 255, 255, 0.7) !important;
-    }
-    .phone-screen.phone-light-theme .inset-row {
-      border-bottom-color: rgba(0, 0, 0, 0.05) !important;
-    }
-    .phone-screen.phone-light-theme .btn-secondary {
-      background: var(--nm-surface-light) !important;
-      color: #1c1c1e !important;
-      border-color: rgba(255, 255, 255, 0.8) !important;
-      box-shadow: var(--nm-flat-light) !important;
-    }
-    .phone-screen.phone-light-theme .btn-secondary:active {
-      box-shadow: var(--nm-pressed-light) !important;
-    }
-    .phone-screen.phone-light-theme .btn-select-bookmark {
-      box-shadow: 2px 2px 6px rgba(163, 177, 198, 0.5), -1px -1px 4px rgba(255, 255, 255, 0.9) !important;
+    .phone-screen.phone-light-theme .telemetry-pill {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: #48484a;
     }
 
-    /* Feature Item Active State */
+    /* Explanatory Right Side Feature Cards */
+    .showcase-info h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .showcase-info > p {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .feature-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+      transform: translateX(3px);
+    }
+
     .feature-item.active-item {
       border-color: var(--apple-blue);
-      box-shadow: 0 0 18px rgba(10, 132, 255, 0.2);
+      box-shadow: 0 0 20px rgba(10, 132, 255, 0.2);
+      background: rgba(20, 26, 38, 0.85);
     }
 
-    .btn-select-bookmark {
-      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35), -1px -1px 3px rgba(255, 255, 255, 0.1);
-      transition: transform 0.18s var(--spring-apple), box-shadow 0.18s ease;
+    .feature-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
     }
-    .btn-select-bookmark:active {
-      transform: scale(0.92) !important;
-      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.4) !important;
+
+    .feature-item h4 {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .feature-item-badge {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-subtle);
+    }
+
+    .feature-item.active-item .feature-item-badge {
+      background: rgba(10, 132, 255, 0.2);
+      border-color: var(--apple-blue);
+      color: #93c5fd;
+    }
+
+    .feature-item p {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-bottom: 0;
+      line-height: 1.5;
+    }
+
+    /* Section 3: 3 Essential Technical Highlights (Anti-Pattern 4 Solution) */
+    .highlights-section {
+      padding: 40px 0 70px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--apple-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 860px) {
+      .highlights-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .highlight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      backdrop-filter: blur(14px);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .highlight-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .highlight-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .highlight-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    .highlight-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .highlight-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-subtle);
+      margin-top: 18px;
+      display: block;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+    }
+
+    /* Section 4: 3-Step Setup & 3 Core FAQs */
+    .onboarding-section {
+      padding: 30px 0 80px;
+    }
+
+    .install-card {
+      background: #111114;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      margin-bottom: 48px;
+      box-shadow: 0 16px 40px -15px rgba(0, 0, 0, 0.8);
+    }
+
+    .source-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 24px;
+    }
+
+    .source-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .source-brand img {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .source-brand h3 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .source-brand p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .source-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 860px) {
+      .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .step-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px 20px;
+      transition: border-color 0.2s ease;
+    }
+
+    .step-box:hover {
+      border-color: var(--border-hover);
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--apple-blue);
+      margin-bottom: 8px;
+      display: block;
+      letter-spacing: 0.05em;
+    }
+
+    .step-box h5 {
+      font-family: var(--font-display);
+      font-size: 1.02rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #ffffff;
+    }
+
+    .step-box p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step-box code {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #f4f4f5;
+    }
+
+    /* 3 Core FAQs */
+    .faq-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .faq-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      transition: border-color 0.2s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-hover);
+    }
+
+    .faq-question {
+      font-family: var(--font-display);
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .faq-answer {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 0;
+      text-align: center;
+      color: var(--text-subtle);
+      font-size: 0.84rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    footer a:hover {
+      color: #ffffff;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #ffffff;
+      color: #09090b;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-size: 0.84rem;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      z-index: 1000;
+      transition: transform 0.25s var(--spring-apple);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
     }
 
     /* Scroll Reveal */
     .reveal {
       opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s var(--spring-apple);
     }
 
     .reveal.is-visible {
@@ -932,165 +1314,48 @@
         transform: none !important;
         transition: none !important;
       }
-      .map-drift-circle {
-        animation: none !important;
-      }
-      .map-pin.pin-drop {
-        animation: none !important;
-      }
-      .tab-content {
+      .map-drift-circle, .map-pin.pin-drop, .tab-content {
         animation: none !important;
       }
     }
 
-    /* 3 Simple Setup Steps */
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-
-    .step-box {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .step-num {
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      color: var(--text-subtle);
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .step-box h5 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .step-box p {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-
-    /* What You Can Do Section */
-    .features-section {
-      padding: 40px 0 80px;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .feature-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      transition: border-color 0.15s;
-    }
-
-    .feature-card:hover {
-      border-color: var(--border-hover);
-    }
-
-    .feature-card h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .feature-card p {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 30px 0;
-      text-align: center;
-      color: var(--text-subtle);
-      font-size: 0.82rem;
-    }
-
-    footer a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #ffffff;
-      color: #000000;
-      padding: 8px 16px;
-      border-radius: 9999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      z-index: 1000;
-      transition: transform 0.25s ease;
-      pointer-events: none;
-    }
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Mobile Specific Optimizations (<480px) */
-    @media (max-width: 480px) {
+    /* Mobile Responsive Optimizations (<540px) */
+    @media (max-width: 540px) {
       .container {
         padding: 0 16px;
       }
       .hero {
-        padding: 40px 0 24px;
+        padding: 44px 0 28px;
       }
       .hero-actions .btn {
         width: 100%;
       }
       .phone-container {
         max-width: 100%;
-        border-radius: 38px;
+        border-radius: 42px;
         padding: 8px;
       }
       .phone-screen {
-        border-radius: 30px;
-        min-height: 560px;
+        border-radius: 34px;
+        min-height: 590px;
       }
-      .app-sheet {
-        padding: 8px 10px 14px;
-      }
-      .source-card {
-        padding: 20px 16px;
+      .install-card {
+        padding: 24px 18px;
       }
       .source-buttons {
         width: 100%;
-        flex-direction: column;
       }
       .source-buttons .btn {
         width: 100%;
-      }
-      .url-box {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .copy-btn {
-        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
 
+  <!-- Ambient Glow & Subtle Grid Backgrounds -->
+  <div class="ambient-glow-top"></div>
+  <div class="ambient-glow-center"></div>
   <div class="bg-grid"></div>
 
   <!-- Header -->
@@ -1099,10 +1364,12 @@
       <a href="#" class="brand">
         <img src="assets/icon.png" alt="LSpoof+ logo">
         <span>LSpoof+</span>
+        <span class="brand-tag">v1.2.8</span>
       </a>
       <ul class="nav-links">
-        <li><a href="#showcase">Preview</a></li>
-        <li><a href="#install">Install</a></li>
+        <li><a href="#showcase">Interactive Demo</a></li>
+        <li><a href="#highlights">Highlights</a></li>
+        <li><a href="#install">Install Guide</a></li>
         <li><a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="nav-btn">Download .dylib</a></li>
       </ul>
@@ -1110,117 +1377,147 @@
   </header>
 
   <main>
-    <!-- Hero -->
+    <!-- Section 1: Hero + Primary Action (Strict 3-Second Conversion Test) -->
     <section class="hero container">
       <div class="tag-badge">
         <span class="tag-dot"></span>
-        <span>Version 1.2.8 · Stable Build · Signed for LiveContainer · 3-Finger Gesture</span>
+        <span>v1.2.8 Release · 16KB Page-Aligned ARM64 · Zero Tether</span>
       </div>
-      <h1>Change Your iPhone GPS Location.</h1>
+      <h1>GPS Location Spoofer for Sideloaded iOS.</h1>
       <p class="hero-p">
-        Override location in any sideloaded app — Pokémon GO, Tinder, Life360, Find My, and more. Native iOS menu, real-time map, drift slider, and automatic update alerts. No jailbreak required.
+        In-process CoreLocation interception for LiveContainer, TrollStore, and Sideloadly. Hold three fingers inside any app to drop pins, simulate road-accurate routes, and add natural GPS drift without a jailbreak.
       </p>
       <div class="hero-actions">
-        <!-- Main button: Download Dylib -->
         <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download LocationSpoofer.dylib
         </a>
-        <!-- Secondary button: Install Guide -->
         <a href="#install" class="btn btn-secondary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Sideload Guide (LiveContainer)
+          3-Step Sideload Guide
         </a>
+      </div>
+
+      <div class="hero-badges-row">
+        <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noopener" class="hero-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Open Source on GitHub
+        </a>
+        <span class="hero-meta-item">·</span>
+        <a href="https://www.virustotal.com/gui/file/d066fdeb8dd1a3ad9f8b99792e83032a35e12287eab29d8d7d9aa568c8e480fa/detection" target="_blank" rel="noopener" class="hero-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          VirusTotal Clean (0/72)
+        </a>
+        <span class="hero-meta-item">·</span>
+        <span class="hero-meta-item">Ad-hoc Signed for iOS 15–18+</span>
       </div>
     </section>
 
-    <!-- Interactive iPhone Showcase -->
+    <!-- Section 2: Interactive Proof (Functional iPhone Simulator) -->
     <section id="showcase" class="showcase-section container">
       <div class="showcase-wrapper">
         
-        <!-- iPhone Simulator -->
+        <!-- iPhone Simulator Hardware -->
         <div class="phone-container">
-          <div class="phone-screen">
+          <div class="phone-screen" id="phoneScreen">
             <div class="dynamic-island">
               <div class="island-cam"></div>
               <div class="island-dot"></div>
             </div>
 
             <div class="app-sheet">
+              <!-- Sheet Header -->
               <div class="app-header-row">
                 <div class="app-title-group">
                   <h3>Location Spoofer</h3>
-                  <p>Choose where apps think you are</p>
+                  <p>In-Process CoreLocation Interceptor</p>
                 </div>
-                <button class="app-close-btn" title="Close">✕</button>
+                <button class="app-close-btn" title="Simulate 3-Finger Dismiss" onclick="showToast('Tap 3 fingers to reopen anytime.')">✕</button>
               </div>
 
-              <!-- Big Hero Status Card with Instant Switch -->
+              <!-- Real-time Diagnostic Telemetry Bar -->
+              <div class="telemetry-pill">
+                <span class="telemetry-tag" id="telemetryStatus">HOOK ACTIVE</span>
+                <span id="telemetryDetails">CLLocationManager · 16KB ARM64</span>
+              </div>
+
+              <!-- Master Spoof Switch Card -->
               <div class="hero-status-card" onclick="toggleDemoSpoofSwitch()">
                 <div class="hero-status-dot" id="demoHeroDot"></div>
                 <div class="hero-status-info">
                   <h4 id="demoHeroTitle">Spoofing Active</h4>
-                  <p id="demoHeroSub">Apps receive your chosen GPS location</p>
+                  <p id="demoHeroSub">Apps receive your chosen GPS coordinates</p>
                 </div>
                 <div class="ios-switch on" id="demoHeroSwitch">
                   <div class="ios-switch-knob"></div>
                 </div>
               </div>
 
-              <!-- Search -->
+              <!-- Search Bar -->
               <div class="ios-search">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <span>Search city, address, or landmark</span>
+                <span>Search city, address, or coordinates</span>
               </div>
 
-              <!-- Map View -->
+              <!-- Interactive Vector Map View -->
               <div class="ios-map-container" id="demoMap">
-                <div class="map-drift-circle" id="demoDriftCircle"></div>
-                <svg id="demoRouteSvg" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none;" viewBox="0 0 320 140">
-                  <path id="demoRoutePath" d="M 50 105 Q 150 25 270 45" fill="none" stroke="#0a84ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 4" opacity="0.9" />
-                  <circle cx="50" cy="105" r="5" fill="#30d158" />
-                  <circle cx="270" cy="45" r="5" fill="#ff453a" />
-                  <circle id="demoRouteSimMarker" cx="50" cy="105" r="6" fill="#ffffff" stroke="#0a84ff" stroke-width="2.5" />
+                <!-- Vector Map Roads & Landmark Details -->
+                <svg class="map-svg-grid" viewBox="0 0 320 154" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M -20 40 Q 90 60 160 30 T 340 70" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
+                  <path d="M 60 -10 L 100 170" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+                  <path d="M 220 -10 L 180 170" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+                  <path d="M 0 110 L 330 110" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
                 </svg>
+
+                <div class="map-drift-circle" id="demoDriftCircle"></div>
+
+                <!-- Route SVG Path -->
+                <svg id="demoRouteSvg" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none;" viewBox="0 0 320 154">
+                  <path id="demoRoutePath" d="M 50 115 Q 150 25 270 55" fill="none" stroke="#0a84ff" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="6 4" opacity="0.95" />
+                  <circle cx="50" cy="115" r="5" fill="#30d158" />
+                  <circle cx="270" cy="55" r="5" fill="#ff453a" />
+                  <circle id="demoRouteSimMarker" cx="50" cy="115" r="6" fill="#ffffff" stroke="#0a84ff" stroke-width="2.5" />
+                </svg>
+
+                <!-- Map Pin -->
                 <svg class="map-pin" id="demoPin" viewBox="0 0 24 24" fill="#ff3b30"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
                 <div class="map-hint" id="demoMapHint">Tap map to drop pin</div>
               </div>
 
-              <!-- Mode Segment: Location | Route | Saved -->
+              <!-- Segment Switch: Location | Route | Saved -->
               <div class="ios-segment">
                 <button class="ios-segment-btn active" onclick="switchPhoneTab('static')">Location</button>
                 <button class="ios-segment-btn" onclick="switchPhoneTab('route')">Route</button>
                 <button class="ios-segment-btn" onclick="switchPhoneTab('bookmarks')">Saved</button>
               </div>
 
-              <!-- Static Tab -->
+              <!-- Tab 1: Static Location -->
               <div id="phoneTabStatic" class="tab-content">
-                <!-- Group: Coordinates -->
                 <div class="inset-group">
                   <div class="inset-row">
                     <div class="sf-badge" style="background: var(--apple-blue);">
                       <svg viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
                     </div>
                     <span class="row-title">Latitude</span>
-                    <input class="row-value" id="demoLat" value="37.774900">
+                    <input class="row-value" id="demoLat" value="37.774900" readonly>
                   </div>
                   <div class="inset-row">
                     <div class="sf-badge" style="background: #30b0c7;">
                       <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1a2 2 0 0 0 2 2v1.93zm6.9-2.54A8 8 0 0 0 18 12c0-.36-.03-.7-.08-1.04l-4.92 4.92v.12a2 2 0 0 0 2 2h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.11z"/></svg>
                     </div>
                     <span class="row-title">Longitude</span>
-                    <input class="row-value" id="demoLon" value="-122.419400">
+                    <input class="row-value" id="demoLon" value="-122.419400" readonly>
                   </div>
                   <div class="inset-row">
                     <div class="sf-badge" style="background: var(--apple-orange);">
                       <svg viewBox="0 0 24 24"><path d="M14 6l-3.75 5 2.85 3.8L11.5 16 7 10 1 18h22z"/></svg>
                     </div>
                     <span class="row-title">Altitude</span>
-                    <input class="row-value" value="12 m">
+                    <input class="row-value" value="12 m" readonly>
                   </div>
                 </div>
 
-                <!-- Group: Options & Drift Slider -->
+                <!-- Drift & Options Group -->
                 <div class="inset-group">
                   <div class="inset-row interactive" onclick="toggleDemoFluctRow()">
                     <div class="sf-badge" style="background: var(--apple-purple);">
@@ -1232,7 +1529,7 @@
                     </div>
                   </div>
 
-                  <!-- Drift Slider Row -->
+                  <!-- Drift Radius Slider Row -->
                   <div class="slider-row" id="demoSliderRow">
                     <div class="slider-header">
                       <div class="slider-title-wrap">
@@ -1250,7 +1547,7 @@
                     <div class="sf-badge" style="background: var(--apple-green);">
                       <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
                     </div>
-                    <span class="row-title" style="width: 140px;">Keep Last Location</span>
+                    <span class="row-title" style="width: 140px;">Keep Last Spot</span>
                     <div class="ios-switch on" id="demoKeepSwitch">
                       <div class="ios-switch-knob"></div>
                     </div>
@@ -1267,19 +1564,19 @@
                   </div>
                 </div>
 
-                <button class="btn btn-primary" style="width: 100%; border-radius: 12px; margin-top: 8px; justify-content: center; font-size: 0.88rem; padding: 10px;" onclick="showToast('Settings saved!')">
+                <button class="btn btn-primary" style="width: 100%; border-radius: 12px; margin-top: 6px; justify-content: center; font-size: 0.88rem; padding: 11px;" onclick="showToast('Settings saved to tweak preferences.')">
                   Save Settings
                 </button>
               </div>
 
-              <!-- Route Tab -->
+              <!-- Tab 2: Route Simulation -->
               <div id="phoneTabRoute" class="tab-content" style="display: none;">
                 <div class="inset-group">
                   <div class="inset-row">
                     <div class="sf-badge" style="background: var(--apple-green);">
                       <svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
                     </div>
-                    <span class="row-title">Start</span>
+                    <span class="row-title">Origin</span>
                     <span class="row-value">Union Square, SF</span>
                   </div>
                   <div class="inset-row">
@@ -1289,34 +1586,33 @@
                     <span class="row-title">Destination</span>
                     <span class="row-value">Golden Gate Park</span>
                   </div>
-                  <div class="inset-row">
+                  <div class="inset-row interactive" onclick="cycleDemoSpeed()">
                     <div class="sf-badge" style="background: var(--apple-orange);">
                       <svg viewBox="0 0 24 24"><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 12 4a7.92 7.92 0 0 1 5.74 2.44L16.4 7.78A5.95 5.95 0 0 0 12 6a6 6 0 0 0-6 6c0 2.22 1.2 4.15 3 5.19V15h2v-3.5a1.5 1.5 0 1 1 2 1.41V15h2v2.19a5.96 5.96 0 0 0 3-4.19z"/></svg>
                     </div>
-                    <span class="row-title">Speed</span>
-                    <span class="row-value">Cycle (15 km/h)</span>
+                    <span class="row-title">Pacing</span>
+                    <span class="row-value" id="demoSpeedLabel">Cycle (15 km/h) ▾</span>
                   </div>
                 </div>
 
                 <div id="demoRouteProgressBox" style="display: none; background: #1c1c1e; border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #8e8e93; margin-bottom: 6px;">
-                    <span>Simulating Route</span>
-                    <span id="demoRouteProgressPct">0%</span>
+                    <span>Simulating Road Path</span>
+                    <span id="demoRouteProgressPct" style="font-family: var(--font-mono); color: #fff;">0%</span>
                   </div>
                   <div style="width: 100%; height: 6px; background: #2c2c2e; border-radius: 3px; overflow: hidden;">
                     <div id="demoRouteProgressBar" style="width: 0%; height: 100%; background: var(--apple-green); transition: width 0.08s linear;"></div>
                   </div>
                 </div>
 
-                <button id="demoRoutePlayBtn" class="btn btn-primary" style="width: 100%; border-radius: 12px; margin-top: 8px; justify-content: center; font-size: 0.88rem; padding: 10px;" onclick="toggleDemoRouteSimulation()">
+                <button id="demoRoutePlayBtn" class="btn btn-primary" style="width: 100%; border-radius: 12px; margin-top: 6px; justify-content: center; font-size: 0.88rem; padding: 11px;" onclick="toggleDemoRouteSimulation()">
                   ▶ Start Route Simulation
                 </button>
               </div>
 
-              <!-- Bookmarks Tab (Saved above Recents) -->
+              <!-- Tab 3: Saved Bookmarks & Recents -->
               <div id="phoneTabBookmarks" class="tab-content" style="display: none;">
-                <!-- Saved Bookmarks First -->
-                <div style="font-size: 0.72rem; color: #8e8e93; font-weight: 600; margin: 4px 6px 6px;">SAVED BOOKMARKS</div>
+                <div style="font-size: 0.72rem; font-family: var(--font-mono); color: #8e8e93; font-weight: 600; margin: 4px 6px 6px;">SAVED BOOKMARKS</div>
                 <div class="inset-group">
                   <div class="inset-row interactive" onclick="selectBookmark('Apple Park', 37.334644, -122.008972)">
                     <div class="sf-badge" style="background: #eab308;">
@@ -1326,12 +1622,11 @@
                       <div style="font-size: 0.82rem; font-weight: 600;">Apple Park</div>
                       <div style="font-size: 0.7rem; color: #8e8e93;">1 Apple Park Way, Cupertino</div>
                     </div>
-                    <button class="btn-select-bookmark" style="padding: 4px 10px; border-radius: 6px; background: var(--apple-blue); border: none; color: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer;">Select</button>
+                    <button style="padding: 4px 10px; border-radius: 6px; background: var(--apple-blue); border: none; color: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer;">Select</button>
                   </div>
                 </div>
 
-                <!-- Recents with Real Place Names Second -->
-                <div style="font-size: 0.72rem; color: #8e8e93; font-weight: 600; margin: 10px 6px 6px;">RECENT LOCATIONS</div>
+                <div style="font-size: 0.72rem; font-family: var(--font-mono); color: #8e8e93; font-weight: 600; margin: 10px 6px 6px;">RECENT LOCATIONS</div>
                 <div class="inset-group">
                   <div class="inset-row interactive" onclick="selectBookmark('Tokyo Tower', 35.658581, 139.745433)">
                     <div class="sf-badge" style="background: var(--apple-blue);">
@@ -1354,46 +1649,61 @@
                 </div>
               </div>
 
-              <!-- Version & Update Check Footer -->
-              <div style="text-align: center; margin: 14px 0 4px;">
-                <button onclick="showToast('LSpoof+ is up to date (v1.2.8)')" style="background: none; border: none; font-size: 0.72rem; color: #8e8e93; cursor: pointer; text-decoration: underline;">LSpoof+ v1.2.8 · Check for Updates</button>
+              <!-- Footer Version Badge -->
+              <div style="text-align: center; margin: 14px 0 2px;">
+                <button onclick="showToast('LSpoof+ is up to date (v1.2.8)')" style="background: none; border: none; font-size: 0.72rem; font-family: var(--font-mono); color: #8e8e93; cursor: pointer; text-decoration: underline;">LSpoof+ v1.2.8 · Check for Updates</button>
               </div>
 
             </div>
           </div>
         </div>
 
-        <!-- Explanatory Right Side -->
+        <!-- Interactive Proof Controller Walkthrough -->
         <div class="showcase-info">
-          <h2>Simple, Clean, and Easy to Use.</h2>
+          <h2>Engineered Like Native iOS Settings.</h2>
           <p>
-            No complex menus or confusing setup. Opens directly inside your app and feels just like native iOS Settings.
+            No external companion app, no developer profile tethering, and zero computer cables. Injected directly into your sideloaded app with full Neumorphic depth.
           </p>
 
           <div class="feature-list">
             <div class="feature-item active-item" onclick="selectFeatureItem(0)">
-              <h4>One-Tap Active Switch</h4>
-              <p>Turn spoofing on or off right at the top of the menu with a single toggle.</p>
+              <div class="feature-item-header">
+                <h4>1. One-Tap Master Killswitch</h4>
+                <span class="feature-item-badge">TRY LIVE</span>
+              </div>
+              <p>Toggle spoofing on or off in real-time. Turning off immediately restores native hardware GPS without restarting the app.</p>
             </div>
 
             <div class="feature-item" onclick="selectFeatureItem(1)">
-              <h4>Starts at Your Real Location</h4>
-              <p>When you open the menu, the map centers on where you actually are instead of somewhere random.</p>
+              <div class="feature-item-header">
+                <h4>2. Map Pin Drop with Radar Echo</h4>
+                <span class="feature-item-badge">TRY LIVE</span>
+              </div>
+              <p>Tap anywhere on the live vector map to place a pin. Coordinates, altitude, and bounding drift update instantly with zero lag.</p>
             </div>
 
             <div class="feature-item" onclick="selectFeatureItem(2)">
-              <h4>Saved Places Above Recents</h4>
-              <p>Your pinned bookmarks appear first, with clear address names for every past location.</p>
+              <div class="feature-item-header">
+                <h4>3. Configurable Gaussian GPS Drift</h4>
+                <span class="feature-item-badge">TRY LIVE</span>
+              </div>
+              <p>Natural dispersion slider (5m to 150m) injects realistic consumer GPS jitter, preventing static coordinate anti-cheat flags.</p>
             </div>
 
             <div class="feature-item" onclick="selectFeatureItem(3)">
-              <h4>Quick Drift Slider</h4>
-              <p>Drag a simple slider from 5m to 150m to add natural GPS drift so games don't flag your position.</p>
+              <div class="feature-item-header">
+                <h4>4. Paced Multi-Point Route Engine</h4>
+                <span class="feature-item-badge">TRY LIVE</span>
+              </div>
+              <p>Simulate smooth transit between waypoints along realistic roads with walking (5 km/h), cycling (15 km/h), or driving (60 km/h).</p>
             </div>
 
             <div class="feature-item" onclick="selectFeatureItem(4)">
-              <h4>In-App Update Checker</h4>
-              <p>The dylib checks GitHub Releases on launch and alerts you on screen whenever a new update is out.</p>
+              <div class="feature-item-header">
+                <h4>5. Instant Bookmarks & Recent Locations</h4>
+                <span class="feature-item-badge">TRY LIVE</span>
+              </div>
+              <p>Save frequently visited coordinates with friendly labels, stored locally in encrypted app container preferences.</p>
             </div>
           </div>
         </div>
@@ -1401,12 +1711,57 @@
       </div>
     </section>
 
-    <!-- Installation Card -->
-    <section id="install" class="container reveal">
-      <div class="install-card source-card">
+    <!-- Section 3: 3 Essential Technical Highlights -->
+    <section id="highlights" class="highlights-section container reveal">
+      <div class="section-header">
+        <div class="section-eyebrow">Load-Bearing Architecture</div>
+        <h2 class="section-title">Built for Modern Sideloading.</h2>
+      </div>
+
+      <div class="highlights-grid">
+        <div class="highlight-card">
+          <div class="highlight-icon-box" style="background: rgba(10, 132, 255, 0.12); color: var(--apple-blue);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </div>
+          <h3>16KB Segment Alignment</h3>
+          <p>
+            Mach-O compiled with 16KB page alignment. Guarantees binary compatibility across modern iOS versions (iOS 15 through iOS 18+) without memory page faults inside LiveContainer or TrollStore.
+          </p>
+          <span class="highlight-tag">MACH-O ARM64 · NO CRASHES</span>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon-box" style="background: rgba(48, 209, 88, 0.12); color: var(--apple-green);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>In-Process Hooking Boundary</h3>
+          <p>
+            Hooks <code>CLLocationManager</code> callbacks at the Mach-O symbol table boundary. The subject process receives synthetic location packets identical to hardware GPS without elevating root privileges.
+          </p>
+          <span class="highlight-tag">CORE LOCATION · ZERO ROOT</span>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-icon-box" style="background: rgba(191, 90, 242, 0.12); color: var(--apple-purple);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+          <h3>3-Finger Discrete Gesture</h3>
+          <p>
+            Menu invocation runs completely in memory via a dedicated UIWindow overlay. Hold three fingers anywhere for 0.8s to open the control panel. No floating bubbles or invasive buttons on screen.
+          </p>
+          <span class="highlight-tag">DISCRETE UI · CLEAN CANVAS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: 3-Step Setup & 3 Core FAQs (Frictionless Onboarding) -->
+    <section id="install" class="onboarding-section container reveal">
+      
+      <!-- Installation Box -->
+      <div class="install-card">
         <div class="source-top">
           <div class="source-brand">
-            <img src="assets/icon.png" alt="LSpoof+ Source Icon">
+            <img src="assets/icon.png" alt="LSpoof+ Icon">
             <div>
               <h3>How to Install</h3>
               <p>Inject into any sideloaded iOS app — no jailbreak needed</p>
@@ -1414,84 +1769,116 @@
           </div>
           <div class="source-buttons">
             <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Download Latest .dylib
             </a>
             <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noopener" class="btn btn-secondary">
-              GitHub Repo
+              GitHub Repository
             </a>
           </div>
         </div>
 
         <div class="steps-grid">
-          <div class="step-box reveal">
-            <span class="step-num">STEP 1 · DOWNLOAD</span>
-            <h5>Get the Dylib</h5>
-            <p>Download <code>LocationSpoofer.dylib</code> from GitHub Releases directly to your iPhone or computer.</p>
+          <div class="step-box">
+            <span class="step-num">STEP 1 · GET THE DYLIB</span>
+            <h5>Download Binary</h5>
+            <p>Download <code>LocationSpoofer.dylib</code> from the latest GitHub Release directly to your device or computer.</p>
           </div>
-          <div class="step-box reveal">
-            <span class="step-num">STEP 2 · INJECT</span>
+          <div class="step-box">
+            <span class="step-num">STEP 2 · INJECT INTO APP</span>
             <h5>LiveContainer or Sideloadly</h5>
-            <p>In <strong>LiveContainer</strong>, place the dylib in your Tweaks folder and turn it on. In <strong>Sideloadly</strong>, inject via Advanced Options.</p>
+            <p>In <strong>LiveContainer</strong>, place the dylib in your app's Tweaks folder and toggle on. In <strong>Sideloadly</strong>, inject via Advanced Options.</p>
           </div>
-          <div class="step-box reveal">
-            <span class="step-num">STEP 3 · OPEN MENU</span>
-            <h5>3-Finger Hold</h5>
-            <p>Hold three fingers anywhere on screen for 0.8s to open the menu. Choose your location and tap Save Settings.</p>
+          <div class="step-box">
+            <span class="step-num">STEP 3 · HOLD 3 FINGERS</span>
+            <h5>Open Menu Anywhere</h5>
+            <p>Launch your target app and hold three fingers anywhere on screen for 0.8s. Pick your destination and tap Save Settings.</p>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- Simple Features Grid -->
-    <section class="features-section container reveal">
-      <div class="features-grid">
-        <div class="feature-card reveal">
-          <h3>Works in Any App</h3>
-          <p>Spoofs system GPS for any sideloaded app: Pokémon GO, Tinder, Life360, Find My, Uber, or social apps.</p>
+      <!-- 3 Core FAQs -->
+      <div class="faq-wrapper">
+        <div class="section-header" style="margin-bottom: 28px;">
+          <div class="section-eyebrow">Straightforward Answers</div>
+          <h2 class="section-title">Frequently Asked Questions.</h2>
         </div>
-        <div class="feature-card reveal">
-          <h3>Simulate Movement</h3>
-          <p>Drop a start and end pin to automatically simulate walking, cycling, or driving along real roads.</p>
-        </div>
-        <div class="feature-card reveal">
-          <h3>Natural GPS Drift</h3>
-          <p>Adds subtle randomized drift around your spot so apps see normal GPS behavior.</p>
-        </div>
-        <div class="feature-card reveal">
-          <h3>In-App Update Alerts</h3>
-          <p>Automatic background checks alert you on-screen whenever a new dylib is available on GitHub.</p>
+
+        <div class="faq-grid">
+          <div class="faq-item">
+            <div class="faq-question">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--apple-blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Does LSpoof+ require a jailbroken iPhone or computer tether?
+            </div>
+            <div class="faq-answer">
+              No. LSpoof+ runs entirely in user-space inside sideloaded apps. You only need a sideloading manager such as LiveContainer, TrollStore, or Sideloadly. No computer cables, no tethering daemons, and no jailbreak required.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--apple-blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Does this spoof system-wide GPS or just my target app?
+            </div>
+            <div class="faq-answer">
+              Because modern iOS securely sandboxes sideloaded apps, LSpoof+ intercepts location calls specifically for the application it is injected into (such as Pokémon GO, Life360, Tinder, Find My, or social tools). Your device's native Apple Maps and emergency GPS remain untouched.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--apple-blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              How do I dismiss and reopen the menu inside my app?
+            </div>
+            <div class="faq-answer">
+              Tap the ✕ button in the top right to instantly hide the overlay. To summon the spoofer menu at any point, hold three fingers on your screen simultaneously for 0.8 seconds.
+            </div>
+          </div>
         </div>
       </div>
+
     </section>
   </main>
 
+  <!-- Clean Minimal Footer -->
   <footer>
     <div class="container">
       <p>
-        Open source on <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noopener">GitHub</a>. Maintained by <a href="https://github.com/getsentrix" target="_blank" rel="noopener">getsentrix</a>.
+        Open source under MIT License · Maintained by <a href="https://github.com/getsentrix" target="_blank" rel="noopener">getsentrix</a> on <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noopener">GitHub</a>.
       </p>
     </div>
   </footer>
 
+  <!-- Toast Notification System -->
   <div class="toast" id="toast">
-    <span id="toastMsg">URL copied to clipboard!</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#09090b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastMsg">Action complete</span>
   </div>
 
   <script>
+    // Toast Notification Dispatcher
+    let toastTimeout = null;
     function showToast(msg) {
       const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').innerText = msg;
+      const toastMsg = document.getElementById('toastMsg');
+      if (!toast || !toastMsg) return;
+      
+      toastMsg.innerText = msg;
       toast.classList.add('show');
-      setTimeout(() => {
+      
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
-      }, 2500);
+      }, 2400);
     }
 
+    // Demo Spoof Switch
     function toggleDemoSpoofSwitch() {
       const sw = document.getElementById('demoHeroSwitch');
       const dot = document.getElementById('demoHeroDot');
       const title = document.getElementById('demoHeroTitle');
       const sub = document.getElementById('demoHeroSub');
+      const telemStatus = document.getElementById('telemetryStatus');
 
       sw.classList.toggle('on');
       const isOn = sw.classList.contains('on');
@@ -1505,16 +1892,25 @@
       if (isOn) {
         dot.classList.remove('inactive');
         title.innerText = "Spoofing Active";
-        sub.innerText = "Apps receive your chosen GPS location";
+        sub.innerText = "Apps receive your chosen GPS coordinates";
+        if (telemStatus) {
+          telemStatus.innerText = "HOOK ACTIVE";
+          telemStatus.style.color = "var(--apple-green)";
+        }
         showToast("Spoofing turned ON.");
       } else {
         dot.classList.add('inactive');
         title.innerText = "Spoofing Inactive";
-        sub.innerText = "Using device native GPS";
+        sub.innerText = "Device native GPS restored";
+        if (telemStatus) {
+          telemStatus.innerText = "HOOK BYPASSED";
+          telemStatus.style.color = "var(--apple-orange)";
+        }
         showToast("Spoofing turned OFF. Real GPS restored.");
       }
     }
 
+    // Toggle GPS Drift Row & Radius Visualizer
     function toggleDemoFluctRow() {
       const sw = document.getElementById('demoFluctSwitch');
       const row = document.getElementById('demoSliderRow');
@@ -1523,13 +1919,14 @@
       const isOn = sw.classList.contains('on');
       row.style.display = isOn ? 'flex' : 'none';
       if (circle) circle.style.display = isOn ? 'block' : 'none';
+      showToast(isOn ? "GPS Drift enabled (Gaussian dispersion)" : "GPS Drift disabled (Static fix)");
     }
 
     function updateDemoRadius(val) {
       document.getElementById('demoRadiusVal').innerText = val + " m";
       const circle = document.getElementById('demoDriftCircle');
       if (circle) {
-        const sizePx = Math.round(24 + (val / 150) * 80);
+        const sizePx = Math.round(26 + (val / 150) * 84);
         circle.style.width = sizePx + 'px';
         circle.style.height = sizePx + 'px';
       }
@@ -1537,12 +1934,16 @@
 
     function toggleDemoSwitch(id) {
       const sw = document.getElementById(id);
-      if (sw) sw.classList.toggle('on');
+      if (sw) {
+        sw.classList.toggle('on');
+        showToast("Preference toggled.");
+      }
     }
 
+    // Dark/Light Neumorphic Appearance
     function toggleDemoDarkMode() {
       const sw = document.getElementById('demoDarkSwitch');
-      const screen = document.querySelector('.phone-screen');
+      const screen = document.getElementById('phoneScreen');
       if (!sw || !screen) return;
       sw.classList.toggle('on');
       if (sw.classList.contains('on')) {
@@ -1550,10 +1951,11 @@
         showToast('UI Appearance: Dark Mode');
       } else {
         screen.classList.add('phone-light-theme');
-        showToast('UI Appearance: Light Mode');
+        showToast('UI Appearance: Light Mode (Neumorphic)');
       }
     }
 
+    // Tab Switching
     function switchPhoneTab(tab) {
       const staticDiv = document.getElementById('phoneTabStatic');
       const routeDiv = document.getElementById('phoneTabRoute');
@@ -1575,9 +1977,6 @@
         searchEl.style.display = 'flex';
         if (routeSvg) routeSvg.style.display = 'none';
         if (pinEl) pinEl.style.display = 'block';
-        staticDiv.style.animation = 'none';
-        void staticDiv.offsetWidth;
-        staticDiv.style.animation = 'tabSpringEnter 0.35s var(--spring-apple)';
       } else if (tab === 'route') {
         btns[1].classList.add('active');
         staticDiv.style.display = 'none';
@@ -1587,9 +1986,6 @@
         searchEl.style.display = 'none';
         if (routeSvg) routeSvg.style.display = 'block';
         if (pinEl) pinEl.style.display = 'none';
-        routeDiv.style.animation = 'none';
-        void routeDiv.offsetWidth;
-        routeDiv.style.animation = 'tabSpringEnter 0.35s var(--spring-apple)';
       } else {
         btns[2].classList.add('active');
         staticDiv.style.display = 'none';
@@ -1599,12 +1995,10 @@
         searchEl.style.display = 'none';
         if (routeSvg) routeSvg.style.display = 'none';
         if (pinEl) pinEl.style.display = 'block';
-        bmarksDiv.style.animation = 'none';
-        void bmarksDiv.offsetWidth;
-        bmarksDiv.style.animation = 'tabSpringEnter 0.35s var(--spring-apple)';
       }
     }
 
+    // Select Bookmark
     function selectBookmark(name, lat, lon) {
       const latInput = document.getElementById('demoLat');
       const lonInput = document.getElementById('demoLon');
@@ -1656,35 +2050,39 @@
       }, 400);
     }
 
+    // Speed Pacing Selector
+    const speedProfiles = [
+      { name: "Walk (5 km/h)", interval: 110 },
+      { name: "Cycle (15 km/h)", interval: 70 },
+      { name: "Drive (60 km/h)", interval: 35 }
+    ];
+    let currentSpeedIdx = 1;
+    function cycleDemoSpeed() {
+      currentSpeedIdx = (currentSpeedIdx + 1) % speedProfiles.length;
+      const profile = speedProfiles[currentSpeedIdx];
+      document.getElementById('demoSpeedLabel').innerText = profile.name + " ▾";
+      showToast("Pacing adjusted: " + profile.name);
+      if (routeSimInterval) {
+        clearInterval(routeSimInterval);
+        startRouteInterval(profile.interval);
+      }
+    }
+
+    // Route Simulation Engine
     let routeSimInterval = null;
     let routeProgress = 0;
-    function toggleDemoRouteSimulation() {
-      const playBtn = document.getElementById('demoRoutePlayBtn');
-      const pBox = document.getElementById('demoRouteProgressBox');
+    function startRouteInterval(intervalMs) {
       const pBar = document.getElementById('demoRouteProgressBar');
       const pPct = document.getElementById('demoRouteProgressPct');
       const marker = document.getElementById('demoRouteSimMarker');
       const path = document.getElementById('demoRoutePath');
-
-      if (routeSimInterval) {
-        clearInterval(routeSimInterval);
-        routeSimInterval = null;
-        if (playBtn) playBtn.innerText = '▶ Resume Route Simulation';
-        showToast('Route simulation paused.');
-        return;
-      }
-
-      if (pBox) pBox.style.display = 'block';
-      if (playBtn) playBtn.innerText = '⏹ Pause Simulation';
-      showToast('Simulating movement along roads (15 km/h)...');
-
+      if (!path) return;
       const pathLength = path.getTotalLength();
 
       routeSimInterval = setInterval(() => {
         routeProgress += 1;
-        if (routeProgress > 100) {
-          routeProgress = 0;
-        }
+        if (routeProgress > 100) routeProgress = 0;
+
         if (pBar) pBar.style.width = routeProgress + '%';
         if (pPct) pPct.innerText = routeProgress + '%';
 
@@ -1704,11 +2102,30 @@
         if (lonInput) lonInput.value = curLon;
 
         if (routeProgress === 100) {
-          showToast('Destination reached! Looping route...');
+          showToast('Destination reached. Looping route...');
         }
-      }, 70);
+      }, intervalMs);
     }
 
+    function toggleDemoRouteSimulation() {
+      const playBtn = document.getElementById('demoRoutePlayBtn');
+      const pBox = document.getElementById('demoRouteProgressBox');
+
+      if (routeSimInterval) {
+        clearInterval(routeSimInterval);
+        routeSimInterval = null;
+        if (playBtn) playBtn.innerText = '▶ Resume Route Simulation';
+        showToast('Route simulation paused.');
+        return;
+      }
+
+      if (pBox) pBox.style.display = 'block';
+      if (playBtn) playBtn.innerText = '⏹ Pause Simulation';
+      showToast('Simulating realistic movement along roads...');
+      startRouteInterval(speedProfiles[currentSpeedIdx].interval);
+    }
+
+    // Feature Card Controller Interactivity
     function selectFeatureItem(idx) {
       const items = document.querySelectorAll('.feature-list .feature-item');
       items.forEach((item, i) => {
@@ -1733,18 +2150,23 @@
           circle.style.left = '50%';
           circle.style.top = '50%';
         }
-        showToast('Centered on real GPS coordinates.');
+        showToast('Map pin centered on coordinate fix.');
       } else if (idx === 2) {
-        switchPhoneTab('bookmarks');
-      } else if (idx === 3) {
         switchPhoneTab('static');
         const sw = document.getElementById('demoFluctSwitch');
         if (sw && !sw.classList.contains('on')) {
           toggleDemoFluctRow();
         }
-        showToast('GPS drift radius slider active.');
+        showToast('Gaussian GPS drift radius active.');
+      } else if (idx === 3) {
+        switchPhoneTab('route');
+        if (!routeSimInterval) {
+          toggleDemoRouteSimulation();
+        } else {
+          showToast('Route simulation currently executing.');
+        }
       } else if (idx === 4) {
-        showToast('LSpoof+ is up to date (v1.2.8).');
+        switchPhoneTab('bookmarks');
       }
     }
 
@@ -1762,8 +2184,8 @@
         const rect = mapEl.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        const pctX = Math.max(12, Math.min(88, (x / rect.width) * 100));
-        const pctY = Math.max(18, Math.min(82, (y / rect.height) * 100));
+        const pctX = Math.max(10, Math.min(90, (x / rect.width) * 100));
+        const pctY = Math.max(16, Math.min(84, (y / rect.height) * 100));
 
         if (pinEl) {
           pinEl.style.left = pctX + '%';
@@ -1816,7 +2238,7 @@
             revealObserver.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.12 });
+      }, { threshold: 0.1 });
 
       document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
     } else {
