@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="showcase.gif" width="540" alt="LSpoof+ Showcase Video Preview" style="border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+  <img src="https://www.mediafire.com/view/q3fg9n0k34b0a2r/gemini_generated_video_46adb872.gif/file" width="540" alt="LSpoof+ Showcase Video Preview" style="border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
 </p>
 
 ---
