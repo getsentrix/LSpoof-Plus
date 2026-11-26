@@ -8,7 +8,7 @@
 
 <p align="center">
   GPS location spoofer for sideloaded iOS apps. Supports Life360. <strong>Dylib Tweak File</strong>
-<a href="https://www.virustotal.com/gui/file/d066fdeb8dd1a3ad9f8b99792e83032a35e12287eab29d8d7d9aa568c8e480fa/detection">VirusTotal Analysis</a>
+<a href="https://www.virustotal.com/gui/file/bd5ee52e47f3a37f5c686f6bab6f31a1d9e38b683cc7b5fd3af40f33b271db45">VirusTotal Analysis</a>
 </p>
 
 <p align="center">
