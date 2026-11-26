@@ -353,15 +353,25 @@ static const CGFloat kLSMapHeight = 220.0;
     if (!sender) return;
     UIImpactFeedbackGenerator *haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
     [haptic impactOccurred];
-    [UIView animateWithDuration:0.10 delay:0 options:UIViewAnimationOptionCurveEaseIn animations:^{
-        sender.transform = CGAffineTransformMakeScale(0.96, 0.96);
+    NSTimeInterval duration = UIAccessibilityIsReduceMotionEnabled() ? 0.05 : 0.09;
+    [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionCurveEaseIn | UIViewAnimationOptionAllowUserInteraction animations:^{
+        if (!UIAccessibilityIsReduceMotionEnabled()) {
+            sender.transform = CGAffineTransformMakeScale(0.985, 0.955);
+        }
         sender.layer.shadowOpacity = 0.20;
     } completion:nil];
 }
 
 - (void)handleButtonTouchUp:(UIButton *)sender {
     if (!sender) return;
-    [UIView animateWithDuration:0.35 delay:0 usingSpringWithDamping:0.62 initialSpringVelocity:0.8 options:UIViewAnimationOptionCurveEaseOut animations:^{
+    if (UIAccessibilityIsReduceMotionEnabled()) {
+        [UIView animateWithDuration:0.08 delay:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
+            sender.transform = CGAffineTransformIdentity;
+            sender.layer.shadowOpacity = 1.0;
+        } completion:nil];
+        return;
+    }
+    [UIView animateWithDuration:0.24 delay:0 usingSpringWithDamping:0.72 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionAllowUserInteraction animations:^{
         sender.transform = CGAffineTransformIdentity;
         sender.layer.shadowOpacity = 1.0;
     } completion:nil];
@@ -703,9 +713,9 @@ static const CGFloat kLSMapHeight = 220.0;
         [self.titleLabel.trailingAnchor constraintLessThanOrEqualToAnchor:self.closeButton.leadingAnchor constant:-12.0],
 
         [self.closeButton.centerYAnchor constraintEqualToAnchor:self.titleLabel.centerYAnchor],
-        [self.closeButton.trailingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor],
-        [self.closeButton.widthAnchor constraintEqualToConstant:32.0],
-        [self.closeButton.heightAnchor constraintEqualToConstant:32.0],
+        [self.closeButton.trailingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor constant:6.0],
+        [self.closeButton.widthAnchor constraintEqualToConstant:44.0],
+        [self.closeButton.heightAnchor constraintEqualToConstant:44.0],
 
         [self.subtitleLabel.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:3.0],
         [self.subtitleLabel.leadingAnchor constraintEqualToAnchor:self.headerView.leadingAnchor],
@@ -1499,10 +1509,10 @@ static const CGFloat kLSMapHeight = 220.0;
     [feedback impactOccurred];
 
     UITableViewCell *latCell = self.latitudeCell;
-    if (latCell) {
+    if (latCell && !UIAccessibilityIsReduceMotionEnabled()) {
         CAKeyframeAnimation *shake = [CAKeyframeAnimation animationWithKeyPath:@"transform.translation.x"];
-        shake.values = @[@0, @-8, @8, @-6, @6, @0];
-        shake.duration = 0.35;
+        shake.values = @[@0, @-9, @9, @-6, @6, @-3, @3, @0];
+        shake.duration = 0.30;
         [latCell.layer addAnimation:shake forKey:@"shake"];
     }
 }
@@ -1747,14 +1757,21 @@ static const CGFloat kLSMapHeight = 220.0;
         if (!self.searchSuggestionsVisible) {
             self.searchSuggestionsVisible = YES;
             self.suggestionsPanel.alpha = 0.0;
-            self.suggestionsPanel.transform = CGAffineTransformMakeScale(0.97, 0.95);
-            [UIView animateWithDuration:0.28 delay:0 usingSpringWithDamping:0.84 initialSpringVelocity:0.4 options:UIViewAnimationOptionCurveEaseOut animations:^{
+            BOOL reduceMotion = UIAccessibilityIsReduceMotionEnabled();
+            if (!reduceMotion) {
+                self.suggestionsPanel.transform = CGAffineTransformConcat(
+                    CGAffineTransformMakeScale(0.98, 0.94),
+                    CGAffineTransformMakeTranslation(0, -6.0)
+                );
+            }
+            NSTimeInterval duration = reduceMotion ? 0.10 : 0.26;
+            [UIView animateWithDuration:duration delay:0 usingSpringWithDamping:reduceMotion ? 1.0 : 0.84 initialSpringVelocity:0.4 options:UIViewAnimationOptionCurveEaseOut | UIViewAnimationOptionBeginFromCurrentState animations:^{
                 self.suggestionsPanel.alpha = 1.0;
                 self.suggestionsPanel.transform = CGAffineTransformIdentity;
                 [self.tableHeaderContainer layoutIfNeeded];
             } completion:nil];
         } else {
-            [UIView animateWithDuration:0.20 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+            [UIView animateWithDuration:0.18 delay:0 options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState animations:^{
                 [self.tableHeaderContainer layoutIfNeeded];
             } completion:nil];
         }
@@ -1768,13 +1785,22 @@ static const CGFloat kLSMapHeight = 220.0;
     self.suggestionsHeightConstraint.constant = 0.0;
 
     if (!self.suggestionsPanel.hidden) {
-        [UIView animateWithDuration:0.20 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+        BOOL reduceMotion = UIAccessibilityIsReduceMotionEnabled();
+        NSTimeInterval duration = reduceMotion ? 0.08 : 0.13;
+        [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionCurveEaseIn | UIViewAnimationOptionBeginFromCurrentState animations:^{
             self.suggestionsPanel.alpha = 0.0;
-            self.suggestionsPanel.transform = CGAffineTransformMakeScale(0.97, 0.95);
+            if (!reduceMotion) {
+                self.suggestionsPanel.transform = CGAffineTransformConcat(
+                    CGAffineTransformMakeScale(0.98, 0.94),
+                    CGAffineTransformMakeTranslation(0, -6.0)
+                );
+            }
             [self.tableHeaderContainer layoutIfNeeded];
-        } completion:^(__unused BOOL finished) {
-            self.suggestionsPanel.hidden = YES;
-            self.suggestionsPanel.transform = CGAffineTransformIdentity;
+        } completion:^(BOOL finished) {
+            if (finished && !self.searchSuggestionsVisible) {
+                self.suggestionsPanel.hidden = YES;
+                self.suggestionsPanel.transform = CGAffineTransformIdentity;
+            }
         }];
     }
 }

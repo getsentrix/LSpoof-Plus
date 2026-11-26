@@ -45,6 +45,13 @@
     </script>
 
     <style>
+        :root {
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
         body {
             background-color: #0A0A0A;
             color: #EDEDED;
@@ -60,24 +67,63 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Clean native accordion indicator */
-        details > summary {
-            list-style: none;
+        /* Tactile Buttons (Solid Drawing + Snappy Timing) */
+        .btn-primary-cta {
+            position: relative;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 8px 24px -6px rgba(255, 255, 255, 0.16);
+            transition: transform 110ms var(--ease-out), background-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
         }
-        details > summary::-webkit-details-marker {
-            display: none;
+        .btn-primary-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 12px 28px -6px rgba(255, 255, 255, 0.22);
         }
-        details[open] summary .plus-icon {
-            transform: rotate(45deg);
+        .btn-primary-cta:active {
+            transform: translateY(1px) scale(0.985);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        .btn-primary-cta .cta-arrow {
+            transition: transform 160ms var(--ease-out);
+        }
+        .btn-primary-cta:hover .cta-arrow {
+            transform: translateY(2px);
         }
 
-        /* iPhone Simulator Hardware & Screen */
+        .btn-tactile {
+            transition: transform 110ms var(--ease-out), background-color 140ms var(--ease-out), border-color 140ms var(--ease-out), opacity 140ms var(--ease-out);
+        }
+        .btn-tactile:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        /* Fitts's Law: Expand hit target to >=44x44px for compact icon controls */
+        .hit-44 {
+            position: relative;
+        }
+        .hit-44::after {
+            content: '';
+            position: absolute;
+            inset: -10px;
+        }
+
+        /* 3D iPhone Stage & Bezel (Principle 10: Solid Drawing in 3D) */
+        .phone-stage {
+            perspective: 1000px;
+        }
+
         .phone-bezel {
-            background: #141416;
-            border: 1px solid #2A2A2E;
+            position: relative;
+            background: linear-gradient(160deg, #1d1d21 0%, #121215 100%);
+            border: 1px solid #2e2e34;
             border-radius: 46px;
             padding: 10px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.6),
+                0 28px 64px -12px rgba(0, 0, 0, 0.88),
+                0 6px 18px rgba(0, 0, 0, 0.5);
+            transform-style: preserve-3d;
+            transition: transform 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
+            will-change: transform;
         }
 
         .phone-screen {
@@ -86,10 +132,11 @@
             overflow: hidden;
             border: 1px solid #232328;
             color: #FFFFFF;
-            min-height: 615px;
+            min-height: 625px;
             display: flex;
             flex-direction: column;
-            transition: background 0.25s ease, color 0.25s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: background-color 220ms var(--ease-in-out), color 220ms var(--ease-in-out);
         }
 
         .dynamic-island {
@@ -103,6 +150,7 @@
             justify-content: space-between;
             padding: 0 11px;
             border: 1px solid #1F1F23;
+            flex-shrink: 0;
         }
 
         .app-sheet {
@@ -110,6 +158,7 @@
             padding: 10px 14px 16px;
             overflow-y: auto;
             scrollbar-width: none;
+            position: relative;
         }
         .app-sheet::-webkit-scrollbar {
             display: none;
@@ -118,7 +167,7 @@
         /* Map Canvas inside Phone */
         .ios-map-container {
             width: 100%;
-            height: 148px;
+            height: 152px;
             border-radius: 14px;
             background-color: #14161A;
             background-image:
@@ -131,28 +180,32 @@
             margin-bottom: 10px;
             cursor: crosshair;
             user-select: none;
+            touch-action: none;
         }
 
+        /* Principle 6: Moving in Arcs — different X and Y easings curve diagonal moves */
         .map-pin {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -100%);
-            width: 24px;
-            height: 24px;
-            transition: top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: none;
+            width: 26px;
+            height: 26px;
+            transform: translate(-50%, -100%) scaleX(1) scaleY(1);
+            transform-origin: 50% 100%;
+            transition:
+                left 280ms var(--ease-out),
+                top 280ms var(--ease-in-out),
+                transform 130ms var(--ease-spring);
+            cursor: grab;
             z-index: 10;
         }
-
-        .map-pin.pin-drop {
-            animation: pinBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .map-pin.is-dragging {
+            cursor: grabbing;
+            transition: transform 90ms var(--ease-out);
+            transform: translate(-50%, -115%) scale(1.14);
         }
-
-        @keyframes pinBounce {
-            0% { transform: translate(-50%, -170%) scale(1.25); opacity: 0.4; }
-            65% { transform: translate(-50%, -90%) scale(0.95); opacity: 1; }
-            100% { transform: translate(-50%, -100%) scale(1); }
+        .map-pin.pin-squash {
+            transform: translate(-50%, -100%) scaleX(1.16) scaleY(0.84);
         }
 
         .map-radar-ring {
@@ -161,16 +214,16 @@
             height: 26px;
             border-radius: 50%;
             border: 2px solid #0A84FF;
-            background: rgba(10, 132, 255, 0.18);
-            transform: translate(-50%, -50%) scale(0.1);
+            background: rgba(10, 132, 255, 0.20);
+            transform: translate(-50%, -50%) scale(0.15);
+            opacity: 0.95;
             pointer-events: none;
-            animation: radarExpand 0.75s ease-out forwards;
+            transition: transform 520ms var(--ease-out), opacity 520ms var(--ease-out);
             z-index: 5;
         }
-
-        @keyframes radarExpand {
-            0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+        .map-radar-ring.expand {
+            transform: translate(-50%, -50%) scale(2.5);
+            opacity: 0;
         }
 
         .map-drift-circle {
@@ -184,40 +237,172 @@
             pointer-events: none;
             width: 46px;
             height: 46px;
-            transition: width 0.15s ease, height 0.15s ease, top 0.3s ease, left 0.3s ease;
+            transition:
+                width 150ms var(--ease-out),
+                height 150ms var(--ease-out),
+                left 280ms var(--ease-out),
+                top 280ms var(--ease-in-out),
+                opacity 180ms var(--ease-out);
             z-index: 4;
         }
+        .map-drift-circle.is-dragging {
+            transition: width 150ms var(--ease-out), height 150ms var(--ease-out);
+        }
 
-        /* iOS Switch inside Phone */
+        /* Origin-Aware Popover (Principles 11 & 18: Origin Awareness + Fast Closing) */
+        .popover-panel {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.94) translateY(-4px);
+            transition:
+                opacity 110ms var(--ease-in),
+                transform 110ms var(--ease-in);
+        }
+        .popover-panel.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+            transition:
+                opacity 220ms var(--ease-out),
+                transform 220ms var(--ease-out);
+        }
+        .origin-top {
+            transform-origin: top center;
+        }
+        .origin-top-right {
+            transform-origin: top right;
+        }
+
+        /* Staggered list items (Principle 3) */
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+        }
+        .stagger-visible .stagger-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stagger-visible .stagger-item:nth-child(1) { transition-delay: 0ms; }
+        .stagger-visible .stagger-item:nth-child(2) { transition-delay: 38ms; }
+        .stagger-visible .stagger-item:nth-child(3) { transition-delay: 76ms; }
+        .stagger-visible .stagger-item:nth-child(4) { transition-delay: 114ms; }
+
+        /* Segmented Control with Sliding Pill (Principles 5 & 11) */
+        .segment-track {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .segment-pill {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            left: 2px;
+            width: calc((100% - 4px) / 3);
+            border-radius: 6px;
+            background: #1E1F25;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.35);
+            transition: transform 230ms var(--ease-in-out), background-color 200ms ease;
+            z-index: 0;
+        }
+        .ios-segment-btn {
+            position: relative;
+            z-index: 1;
+            transition: color 160ms var(--ease-out), transform 100ms var(--ease-out);
+        }
+        .ios-segment-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Tab Panel Follow-through (Principle 4) */
+        .tab-panel {
+            animation: none;
+            transition: opacity 200ms var(--ease-out), transform 220ms var(--ease-out);
+        }
+        .tab-panel.entering {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        /* iOS Switch with Squash & Stretch (Principle 1 & 17) */
         .ios-switch {
-            width: 40px;
-            height: 24px;
+            width: 42px;
+            height: 25px;
             background: #323236;
             border-radius: 9999px;
             position: relative;
             cursor: pointer;
             flex-shrink: 0;
-            transition: background 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+            transition: background-color 180ms var(--ease-out);
         }
         .ios-switch.on {
             background: #30D158;
         }
         .ios-switch-knob {
-            width: 20px;
-            height: 20px;
+            width: 21px;
+            height: 21px;
             background: #FFFFFF;
             border-radius: 50%;
             position: absolute;
             top: 2px;
             left: 2px;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.32);
+            transform: translateX(0) scaleX(1) scaleY(1);
+            transition: transform 200ms var(--ease-spring);
         }
         .ios-switch.on .ios-switch-knob {
-            transform: translateX(16px);
+            transform: translateX(17px) scaleX(1) scaleY(1);
+        }
+        .ios-switch.is-stretching .ios-switch-knob {
+            transform: translateX(0) scaleX(1.20) scaleY(0.86);
+        }
+        .ios-switch.on.is-stretching .ios-switch-knob {
+            transform: translateX(17px) scaleX(1.20) scaleY(0.86);
+        }
+
+        /* Secondary Action Pulse on Status Dot (Principle 7 & 9) */
+        #demoHeroDot {
+            transition: transform 200ms var(--ease-spring), background-color 180ms var(--ease-out), box-shadow 220ms var(--ease-out);
+        }
+        #demoHeroDot.pop {
+            transform: scale(1.25);
+        }
+
+        /* Shake Feedback (Principle 9: Exaggerated Feedback — 3 shakes over 300ms) */
+        .shake-3x {
+            animation: shake3x 300ms var(--ease-in-out);
+        }
+        @keyframes shake3x {
+            0%, 100% { transform: translateX(0); }
+            16% { transform: translateX(-6px); }
+            33% { transform: translateX(6px); }
+            50% { transform: translateX(-4px); }
+            66% { transform: translateX(4px); }
+            83% { transform: translateX(-2px); }
+        }
+
+        /* Peak-End Save Button Checkmark Draw (Principle 19) */
+        .save-btn {
+            transition: background-color 220ms var(--ease-out), transform 110ms var(--ease-out), box-shadow 200ms var(--ease-out);
+        }
+        .save-btn.is-saved {
+            background-color: #30D158 !important;
+            box-shadow: 0 6px 18px rgba(48, 209, 88, 0.35);
+        }
+        .save-check-path {
+            stroke-dasharray: 24;
+            stroke-dashoffset: 24;
+            transition: stroke-dashoffset 260ms var(--ease-out) 60ms;
+        }
+        .save-btn.is-saved .save-check-path {
+            stroke-dashoffset: 0;
         }
 
         .flash-val {
             color: #30D158 !important;
+            transition: color 140ms var(--ease-out);
         }
 
         /* Phone Light Mode Toggle */
@@ -237,55 +422,125 @@
         .phone-screen.phone-light-theme .sim-text-main {
             color: #1C1C1E;
         }
-        .phone-screen.phone-light-theme .ios-segment-btn.active {
+        .phone-screen.phone-light-theme .segment-pill {
             background: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+        .phone-screen.phone-light-theme .ios-segment-btn.active {
             color: #1C1C1E;
         }
 
-        /* Toast */
+        /* FAQ Smooth Accordion (Principle 18: Fast Closing) */
+        .faq-body {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition:
+                grid-template-rows 120ms var(--ease-in),
+                opacity 100ms var(--ease-in);
+        }
+        .faq-item[data-open="true"] .faq-body {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            transition:
+                grid-template-rows 240ms var(--ease-out),
+                opacity 200ms var(--ease-out) 30ms;
+        }
+        .faq-inner {
+            overflow: hidden;
+        }
+        .faq-item .plus-icon {
+            transition: transform 120ms var(--ease-in);
+        }
+        .faq-item[data-open="true"] .plus-icon {
+            transform: rotate(45deg);
+            transition: transform 220ms var(--ease-out);
+        }
+
+        /* Toast (Principle 18: Open 250ms ease-out, Close 115ms ease-in) */
         .toast {
             position: fixed;
             bottom: 24px;
             left: 50%;
-            transform: translateX(-50%) translateY(80px);
+            transform: translateX(-50%) translateY(18px) scale(0.96);
+            opacity: 0;
             background: #FFFFFF;
             color: #0A0A0A;
             padding: 9px 18px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 12px;
             font-weight: 600;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.65);
             z-index: 100;
-            transition: transform 0.22s ease;
+            transition:
+                transform 115ms var(--ease-in),
+                opacity 115ms var(--ease-in);
             pointer-events: none;
         }
         .toast.show {
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(0) scale(1);
+            opacity: 1;
+            transition:
+                transform 250ms var(--ease-out),
+                opacity 220ms var(--ease-out);
+        }
+
+        /* Install Platform Tabs */
+        .install-tab-track {
+            position: relative;
+            display: inline-grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .install-tab-pill {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: calc((100% - 6px) / 3);
+            border-radius: 6px;
+            background: #1C1C20;
+            border: 1px solid #2C2C32;
+            transition: transform 220ms var(--ease-in-out);
+            z-index: 0;
+        }
+
+        /* Principle 20: Respect prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                transition-delay: 0ms !important;
+                scroll-behavior: auto !important;
+            }
+            .phone-bezel {
+                transform: none !important;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
     <!-- Top Navigation -->
-    <header class="border-b border-hairline bg-canvas sticky top-0 z-30">
+    <header class="border-b border-hairline bg-canvas/90 backdrop-blur-md sticky top-0 z-30">
         <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-2.5">
+            <a href="#" class="flex items-center gap-2.5 min-h-[44px]">
                 <img src="assets/icon.png" alt="LSpoof+" onerror="this.style.display='none'" class="w-6 h-6 rounded-md border border-hairline">
                 <span class="font-semibold text-sm tracking-tight text-white">LSpoof+</span>
                 <span class="text-xs font-mono text-neutral-500">v1.2.8</span>
             </a>
 
-            <div class="flex items-center gap-5">
-                <a href="#demo" class="hidden sm:inline text-xs font-medium text-neutral-400 hover:text-white transition-colors">
+            <div class="flex items-center gap-2 sm:gap-5">
+                <a href="#demo" class="hidden sm:inline-flex items-center min-h-[44px] px-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors">
                     Demo
                 </a>
-                <a href="#install" class="hidden sm:inline text-xs font-medium text-neutral-400 hover:text-white transition-colors">
+                <a href="#install" class="hidden sm:inline-flex items-center min-h-[44px] px-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors">
                     Install
                 </a>
-                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="text-xs font-medium text-neutral-400 hover:text-white transition-colors">
+                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="inline-flex items-center min-h-[44px] px-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors">
                     Source
                 </a>
-                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="px-3.5 py-1.5 bg-white hover:bg-neutral-200 text-black font-medium text-xs rounded-md transition-colors">
+                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="btn-tactile px-3.5 py-2 bg-white hover:bg-neutral-200 text-black font-medium text-xs rounded-md">
                     Download .dylib
                 </a>
             </div>
@@ -295,7 +550,7 @@
     <!-- Main Content -->
     <main class="flex-1 max-w-4xl w-full mx-auto px-6">
 
-        <!-- Hero Section -->
+        <!-- Hero Section (Principle 15: Von Restorff — one primary CTA) -->
         <section class="py-16 sm:py-24 space-y-6">
             <div class="font-mono text-xs text-neutral-500 tracking-wide uppercase">
                 iOS Tweak (.dylib) &bull; Free &amp; Open Source &bull; No Jailbreak
@@ -311,13 +566,14 @@
             </p>
 
             <div class="pt-2 flex flex-wrap items-center gap-3">
-                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="px-5 py-2.5 bg-white hover:bg-neutral-200 text-black font-semibold text-xs sm:text-sm rounded-md transition-colors">
-                    Download LocationSpoofer.dylib
+                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="btn-primary-cta inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-neutral-200 text-black font-semibold text-xs sm:text-sm rounded-md">
+                    <span>Download LocationSpoofer.dylib</span>
+                    <svg class="cta-arrow w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v9M4 8l4 4 4-4"/><path d="M3 14h10"/></svg>
                 </a>
-                <a href="#install" class="px-5 py-2.5 bg-surface hover:bg-elevated text-neutral-200 border border-hairline font-medium text-xs sm:text-sm rounded-md transition-colors">
+                <a href="#install" class="btn-tactile inline-flex items-center px-5 py-3 bg-surface hover:bg-elevated text-neutral-200 border border-hairline font-medium text-xs sm:text-sm rounded-md">
                     How to Install
                 </a>
-                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="px-4 py-2.5 text-xs sm:text-sm font-mono text-neutral-500 hover:text-neutral-300 transition-colors">
+                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="inline-flex items-center min-h-[44px] px-4 text-xs sm:text-sm font-mono text-neutral-500 hover:text-neutral-300 transition-colors">
                     GitHub &nearr;
                 </a>
             </div>
@@ -338,14 +594,14 @@
             <div class="border border-hairline rounded-lg bg-surface p-6 sm:p-10">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
 
-                    <!-- Left: Interactive iPhone Mockup -->
-                    <div class="lg:col-span-5 flex justify-center">
-                        <div class="phone-bezel w-full max-w-[330px]">
+                    <!-- Left: Interactive 3D iPhone Mockup -->
+                    <div class="lg:col-span-5 flex justify-center phone-stage" id="phoneStage">
+                        <div class="phone-bezel w-full max-w-[330px]" id="phoneBezel">
                             <div class="phone-screen" id="phoneScreen">
                                 <!-- Dynamic Island -->
                                 <div class="dynamic-island">
                                     <span class="w-2 h-2 rounded-full bg-neutral-900"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-iosGreen"></span>
+                                    <span id="islandDot" class="w-1.5 h-1.5 rounded-full bg-iosGreen transition-colors duration-200"></span>
                                 </div>
 
                                 <div class="app-sheet">
@@ -355,38 +611,62 @@
                                             <div class="font-semibold text-base tracking-tight sim-text-main">Location Spoofer</div>
                                             <div class="text-[11px] text-neutral-400">Hold 3 fingers to open or hide</div>
                                         </div>
-                                        <button onclick="showToast('Hold 3 fingers anywhere to reopen.')" class="w-6 h-6 rounded-full sim-card border border-[#2A2A2E] bg-[#1C1D22] text-neutral-400 text-xs flex items-center justify-center hover:text-white">
+                                        <button onclick="showToast('Hold 3 fingers anywhere to reopen.')" aria-label="Close" class="hit-44 btn-tactile w-7 h-7 rounded-full sim-card border border-[#2A2A2E] bg-[#1C1D22] text-neutral-400 text-xs flex items-center justify-center hover:text-white">
                                             &times;
                                         </button>
                                     </div>
 
                                     <!-- Status Pill -->
                                     <div class="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-black/40 border border-white/5 font-mono text-[10px] text-neutral-400 mb-2.5">
-                                        <span id="telemetryStatus" class="text-iosGreen font-semibold">ACTIVE</span>
+                                        <span id="telemetryStatus" class="text-iosGreen font-semibold transition-colors duration-150">ACTIVE</span>
                                         <span>ARM64 &bull; 16KB</span>
                                     </div>
 
                                     <!-- Master Switch Card -->
-                                    <div onclick="toggleDemoSpoofSwitch()" class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl p-3 flex items-center gap-3 mb-2.5 cursor-pointer select-none">
+                                    <div id="demoHeroCard" onclick="toggleDemoSpoofSwitch()" class="sim-card btn-tactile bg-[#1B1C20] border border-[#2A2B30] rounded-xl p-3 flex items-center gap-3 mb-2.5 cursor-pointer select-none min-h-[54px]">
                                         <span id="demoHeroDot" class="w-3 h-3 rounded-full bg-iosGreen flex-shrink-0"></span>
                                         <div class="flex-1 min-w-0">
                                             <div id="demoHeroTitle" class="text-xs font-semibold sim-text-main">Spoofing On</div>
                                             <div id="demoHeroSub" class="text-[11px] text-neutral-400 truncate">Using your custom GPS pin</div>
                                         </div>
-                                        <div class="ios-switch on" id="demoHeroSwitch">
+                                        <div class="ios-switch on hit-44" id="demoHeroSwitch">
                                             <div class="ios-switch-knob"></div>
                                         </div>
                                     </div>
 
-                                    <!-- Search Bar -->
-                                    <div id="demoSearchBar" class="sim-well bg-[#0D0E11] border border-[#222328] rounded-lg h-8 px-2.5 flex items-center gap-2 text-[11px] text-neutral-400 mb-2.5">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                        <span>Search city or coordinates</span>
+                                    <!-- Search Bar + Origin-Aware Suggestions Popover -->
+                                    <div class="relative mb-2.5" id="demoSearchWrap">
+                                        <button type="button" id="demoSearchBar" onclick="toggleSearchPopover(event)" class="w-full sim-well btn-tactile bg-[#0D0E11] border border-[#222328] rounded-lg h-9 px-2.5 flex items-center justify-between text-[11px] text-neutral-400">
+                                            <span class="flex items-center gap-2 truncate">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                                <span id="demoSearchText">Search city or coordinates</span>
+                                            </span>
+                                            <span class="font-mono text-[9px] text-neutral-500">TAP</span>
+                                        </button>
+
+                                        <div id="demoSearchPopover" class="popover-panel origin-top absolute left-0 right-0 top-[40px] z-30 sim-card bg-[#1B1C22]/95 backdrop-blur-md border border-[#2F3038] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
+                                            <button type="button" onclick="pickSearchCity('San Francisco', 37.774900, -122.419400, 50, 50)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
+                                                <span class="sim-text-main font-medium">San Francisco</span>
+                                                <span class="font-mono text-[10px] text-neutral-400">37.77, -122.42</span>
+                                            </button>
+                                            <button type="button" onclick="pickSearchCity('Tokyo Tower', 35.658581, 139.745433, 76, 36)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
+                                                <span class="sim-text-main font-medium">Tokyo Tower</span>
+                                                <span class="font-mono text-[10px] text-neutral-400">35.66, 139.75</span>
+                                            </button>
+                                            <button type="button" onclick="pickSearchCity('London Eye', 51.503324, -0.119543, 28, 30)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
+                                                <span class="sim-text-main font-medium">London Eye</span>
+                                                <span class="font-mono text-[10px] text-neutral-400">51.50, -0.12</span>
+                                            </button>
+                                            <button type="button" onclick="pickSearchCity('Central Park, NY', 40.781200, -73.966500, 66, 68)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
+                                                <span class="sim-text-main font-medium">Central Park, NY</span>
+                                                <span class="font-mono text-[10px] text-neutral-400">40.78, -73.97</span>
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <!-- Interactive Map -->
+                                    <!-- Interactive Map (Click Arc + Drag with Rubber Banding) -->
                                     <div class="ios-map-container" id="demoMap">
-                                        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 148" fill="none">
+                                        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 152" fill="none">
                                             <path d="M -20 38 Q 90 58 160 28 T 340 68" stroke="rgba(255,255,255,0.08)" stroke-width="5" stroke-linecap="round"/>
                                             <path d="M 65 -10 L 95 160" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
                                             <path d="M 225 -10 L 185 160" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
@@ -396,47 +676,48 @@
                                         <div class="map-drift-circle" id="demoDriftCircle"></div>
 
                                         <!-- Route Path SVG -->
-                                        <svg id="demoRouteSvg" class="absolute inset-0 w-full h-full pointer-events-none hidden" viewBox="0 0 320 148">
-                                            <path id="demoRoutePath" d="M 48 110 Q 150 24 272 52" fill="none" stroke="#0A84FF" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 4" />
-                                            <circle cx="48" cy="110" r="4.5" fill="#30D158" />
-                                            <circle cx="272" cy="52" r="4.5" fill="#FF453A" />
-                                            <circle id="demoRouteSimMarker" cx="48" cy="110" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.5" />
+                                        <svg id="demoRouteSvg" class="absolute inset-0 w-full h-full pointer-events-none hidden" viewBox="0 0 320 152">
+                                            <path id="demoRoutePath" d="M 48 112 Q 150 24 272 54" fill="none" stroke="#0A84FF" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 4" />
+                                            <circle cx="48" cy="112" r="4.5" fill="#30D158" />
+                                            <circle cx="272" cy="54" r="4.5" fill="#FF453A" />
+                                            <circle id="demoRouteSimMarker" cx="48" cy="112" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.5" />
                                         </svg>
 
-                                        <!-- Pin -->
+                                        <!-- Pin (Draggable + Arc Motion + Squash) -->
                                         <svg class="map-pin" id="demoPin" viewBox="0 0 24 24" fill="#FF3B30">
                                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
                                         </svg>
 
                                         <div id="demoMapHint" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/85 border border-white/10 px-2.5 py-0.5 rounded-full font-mono text-[10px] text-neutral-300 whitespace-nowrap pointer-events-none">
-                                            Tap map to drop pin
+                                            Tap or drag pin
                                         </div>
                                     </div>
 
-                                    <!-- Segment Tabs -->
-                                    <div class="sim-well grid grid-cols-3 bg-[#0D0E11] border border-[#222328] rounded-lg p-0.5 mb-2.5">
-                                        <button class="ios-segment-btn active py-1 rounded-md text-[11px] font-medium bg-[#1B1C20] text-white" onclick="switchPhoneTab('static')">Location</button>
-                                        <button class="ios-segment-btn py-1 rounded-md text-[11px] font-medium text-neutral-400" onclick="switchPhoneTab('route')">Route</button>
-                                        <button class="ios-segment-btn py-1 rounded-md text-[11px] font-medium text-neutral-400" onclick="switchPhoneTab('bookmarks')">Saved</button>
+                                    <!-- Segment Tabs with Sliding Indicator -->
+                                    <div class="sim-well segment-track bg-[#0D0E11] border border-[#222328] rounded-lg p-0.5 mb-2.5">
+                                        <div class="segment-pill" id="segmentPill"></div>
+                                        <button type="button" class="ios-segment-btn active py-1.5 rounded-md text-[11px] font-medium text-white" onclick="switchPhoneTab('static')">Location</button>
+                                        <button type="button" class="ios-segment-btn py-1.5 rounded-md text-[11px] font-medium text-neutral-400" onclick="switchPhoneTab('route')">Route</button>
+                                        <button type="button" class="ios-segment-btn py-1.5 rounded-md text-[11px] font-medium text-neutral-400" onclick="switchPhoneTab('bookmarks')">Saved</button>
                                     </div>
 
                                     <!-- Tab 1: Location -->
-                                    <div id="phoneTabStatic" class="space-y-2.5">
+                                    <div id="phoneTabStatic" class="tab-panel space-y-2.5">
                                         <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
                                             <div class="px-3 py-2 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">Latitude</span>
-                                                <input id="demoLat" value="37.774900" readonly class="sim-well w-28 text-right font-mono text-[11px] bg-[#0D0E11] border border-white/5 rounded px-2 py-1 text-neutral-200 outline-none">
+                                                <input id="demoLat" value="37.774900" readonly class="sim-well w-28 text-right font-mono text-[11px] bg-[#0D0E11] border border-white/5 rounded px-2 py-1 text-neutral-200 outline-none tabular">
                                             </div>
                                             <div class="px-3 py-2 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">Longitude</span>
-                                                <input id="demoLon" value="-122.419400" readonly class="sim-well w-28 text-right font-mono text-[11px] bg-[#0D0E11] border border-white/5 rounded px-2 py-1 text-neutral-200 outline-none">
+                                                <input id="demoLon" value="-122.419400" readonly class="sim-well w-28 text-right font-mono text-[11px] bg-[#0D0E11] border border-white/5 rounded px-2 py-1 text-neutral-200 outline-none tabular">
                                             </div>
                                         </div>
 
                                         <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
-                                            <div onclick="toggleDemoFluctRow()" class="px-3 py-2 flex items-center justify-between cursor-pointer">
+                                            <div onclick="toggleDemoFluctRow()" class="px-3 py-2 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">GPS Drift</span>
-                                                <div class="ios-switch on" id="demoFluctSwitch">
+                                                <div class="ios-switch on hit-44" id="demoFluctSwitch">
                                                     <div class="ios-switch-knob"></div>
                                                 </div>
                                             </div>
@@ -449,40 +730,57 @@
                                                 <input type="range" min="5" max="150" value="25" oninput="updateDemoRadius(this.value)" class="w-full accent-[#BF5AF2] cursor-pointer h-1.5">
                                             </div>
 
-                                            <div onclick="toggleDemoSwitch('demoKeepSwitch')" class="px-3 py-2 flex items-center justify-between cursor-pointer">
+                                            <div onclick="toggleDemoSwitch('demoKeepSwitch')" class="px-3 py-2 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">Remember Last Spot</span>
-                                                <div class="ios-switch on" id="demoKeepSwitch">
+                                                <div class="ios-switch on hit-44" id="demoKeepSwitch">
                                                     <div class="ios-switch-knob"></div>
                                                 </div>
                                             </div>
 
-                                            <div onclick="toggleDemoDarkMode()" class="px-3 py-2 flex items-center justify-between cursor-pointer">
+                                            <div onclick="toggleDemoDarkMode()" class="px-3 py-2 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">Dark Mode</span>
-                                                <div class="ios-switch on" id="demoDarkSwitch">
+                                                <div class="ios-switch on hit-44" id="demoDarkSwitch">
                                                     <div class="ios-switch-knob"></div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <button onclick="showToast('Location saved.')" class="w-full py-2 rounded-lg bg-iosBlue hover:opacity-90 text-white font-semibold text-xs transition-opacity">
-                                            Save Settings
+                                        <button type="button" id="demoSaveBtn" onclick="handleDemoSave()" class="save-btn btn-tactile w-full py-2.5 rounded-lg bg-iosBlue hover:brightness-110 text-white font-semibold text-xs flex items-center justify-center gap-1.5 min-h-[40px]">
+                                            <svg id="demoSaveIcon" class="w-3.5 h-3.5 hidden" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="save-check-path" d="M3 8.5l3.2 3.2L13 4.5"/></svg>
+                                            <span id="demoSaveText">Save Settings</span>
                                         </button>
                                     </div>
 
                                     <!-- Tab 2: Route -->
-                                    <div id="phoneTabRoute" class="hidden space-y-2.5">
-                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
-                                            <div class="px-3 py-2 flex items-center justify-between">
+                                    <div id="phoneTabRoute" class="tab-panel hidden space-y-2.5">
+                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5 relative">
+                                            <div class="px-3 py-2.5 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">Start</span>
                                                 <span class="font-mono text-[11px] text-neutral-400">Union Square, SF</span>
                                             </div>
-                                            <div class="px-3 py-2 flex items-center justify-between">
+                                            <div class="px-3 py-2.5 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">End</span>
                                                 <span class="font-mono text-[11px] text-neutral-400">Golden Gate Park</span>
                                             </div>
-                                            <div onclick="cycleDemoSpeed()" class="px-3 py-2 flex items-center justify-between cursor-pointer">
+                                            <div onclick="toggleSpeedPopover(event)" class="px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">Speed</span>
                                                 <span id="demoSpeedLabel" class="font-mono text-[11px] text-iosBlue">Bike (15 km/h) &#9662;</span>
+                                            </div>
+
+                                            <!-- Speed Picker Popover (Principles 11 & 18) -->
+                                            <div id="demoSpeedPopover" class="popover-panel origin-top-right absolute right-2 top-[110px] z-30 w-44 sim-card bg-[#202128]/95 backdrop-blur-md border border-[#34353E] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
+                                                <button type="button" onclick="setDemoSpeed(0, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
+                                                    <span class="sim-text-main">Walk</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400">5 km/h</span>
+                                                </button>
+                                                <button type="button" onclick="setDemoSpeed(1, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
+                                                    <span class="sim-text-main">Bike</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400">15 km/h</span>
+                                                </button>
+                                                <button type="button" onclick="setDemoSpeed(2, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
+                                                    <span class="sim-text-main">Drive</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400">60 km/h</span>
+                                                </button>
                                             </div>
                                         </div>
 
@@ -496,35 +794,35 @@
                                             </div>
                                         </div>
 
-                                        <button id="demoRoutePlayBtn" onclick="toggleDemoRouteSimulation()" class="w-full py-2 rounded-lg bg-iosBlue hover:opacity-90 text-white font-semibold text-xs transition-opacity">
+                                        <button type="button" id="demoRoutePlayBtn" onclick="toggleDemoRouteSimulation()" class="btn-tactile w-full py-2.5 rounded-lg bg-iosBlue hover:brightness-110 text-white font-semibold text-xs min-h-[40px]">
                                             Start Route
                                         </button>
                                     </div>
 
-                                    <!-- Tab 3: Saved -->
-                                    <div id="phoneTabBookmarks" class="hidden space-y-2.5">
+                                    <!-- Tab 3: Saved (Staggered Cascade) -->
+                                    <div id="phoneTabBookmarks" class="tab-panel hidden space-y-2.5">
                                         <div class="font-mono text-[10px] text-neutral-400 px-1">SAVED PLACES</div>
-                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
-                                            <div onclick="selectBookmark('Apple Park', 37.334644, -122.008972)" class="px-3 py-2.5 flex items-center justify-between cursor-pointer">
+                                        <div id="bookmarksList" class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
+                                            <div onclick="selectBookmark('Apple Park', 37.334644, -122.008972, 24, 52)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Apple Park</div>
                                                     <div class="text-[10px] text-neutral-400">Cupertino, CA</div>
                                                 </div>
-                                                <span class="px-2 py-0.5 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
+                                                <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>
-                                            <div onclick="selectBookmark('Tokyo Tower', 35.658581, 139.745433)" class="px-3 py-2.5 flex items-center justify-between cursor-pointer">
+                                            <div onclick="selectBookmark('Tokyo Tower', 35.658581, 139.745433, 76, 36)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Tokyo Tower</div>
                                                     <div class="text-[10px] text-neutral-400">Minato City, Tokyo</div>
                                                 </div>
-                                                <span class="px-2 py-0.5 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
+                                                <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>
-                                            <div onclick="selectBookmark('Times Square', 40.758896, -73.985131)" class="px-3 py-2.5 flex items-center justify-between cursor-pointer">
+                                            <div onclick="selectBookmark('Times Square', 40.758896, -73.985131, 66, 68)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Times Square</div>
                                                     <div class="text-[10px] text-neutral-400">New York, NY</div>
                                                 </div>
-                                                <span class="px-2 py-0.5 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
+                                                <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>
                                         </div>
                                     </div>
@@ -540,12 +838,12 @@
                             <div class="font-mono text-xs text-neutral-500 uppercase">Interactive Preview</div>
                             <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Feels like a built-in iOS menu.</h2>
                             <p class="text-xs sm:text-sm text-neutral-400 leading-relaxed">
-                                Click any item below—or tap straight inside the phone screen—to try the controls.
+                                Click any item below—or tap and drag inside the phone screen—to try the controls.
                             </p>
                         </div>
 
                         <div class="border border-hairline rounded-lg divide-y divide-hairline bg-canvas">
-                            <div class="feature-item active-item p-4 cursor-pointer transition-colors bg-elevated/60" onclick="selectFeatureItem(0)">
+                            <div class="feature-item btn-tactile active-item p-4 cursor-pointer transition-colors duration-150 bg-elevated/60" onclick="selectFeatureItem(0)">
                                 <div class="flex items-center justify-between mb-1">
                                     <h3 class="text-sm font-semibold text-white">1. Turn on or off anytime</h3>
                                     <span class="font-mono text-[10px] text-iosBlue">TRY IT</span>
@@ -555,17 +853,17 @@
                                 </p>
                             </div>
 
-                            <div class="feature-item p-4 cursor-pointer hover:bg-elevated/40 transition-colors" onclick="selectFeatureItem(1)">
+                            <div class="feature-item btn-tactile p-4 cursor-pointer hover:bg-elevated/40 transition-colors duration-150" onclick="selectFeatureItem(1)">
                                 <div class="flex items-center justify-between mb-1">
-                                    <h3 class="text-sm font-semibold text-white">2. Tap anywhere on the map</h3>
+                                    <h3 class="text-sm font-semibold text-white">2. Tap or drag anywhere on the map</h3>
                                     <span class="font-mono text-[10px] text-neutral-500">TRY IT</span>
                                 </div>
                                 <p class="text-xs text-neutral-400 leading-relaxed">
-                                    Drop a pin anywhere in the world or search a city. Your coordinates update right away.
+                                    Drop a pin anywhere in the world, drag it directly on the map, or pick a city from search.
                                 </p>
                             </div>
 
-                            <div class="feature-item p-4 cursor-pointer hover:bg-elevated/40 transition-colors" onclick="selectFeatureItem(2)">
+                            <div class="feature-item btn-tactile p-4 cursor-pointer hover:bg-elevated/40 transition-colors duration-150" onclick="selectFeatureItem(2)">
                                 <div class="flex items-center justify-between mb-1">
                                     <h3 class="text-sm font-semibold text-white">3. Realistic GPS drift</h3>
                                     <span class="font-mono text-[10px] text-neutral-500">TRY IT</span>
@@ -575,7 +873,7 @@
                                 </p>
                             </div>
 
-                            <div class="feature-item p-4 cursor-pointer hover:bg-elevated/40 transition-colors" onclick="selectFeatureItem(3)">
+                            <div class="feature-item btn-tactile p-4 cursor-pointer hover:bg-elevated/40 transition-colors duration-150" onclick="selectFeatureItem(3)">
                                 <div class="flex items-center justify-between mb-1">
                                     <h3 class="text-sm font-semibold text-white">4. Walk, bike, or drive a route</h3>
                                     <span class="font-mono text-[10px] text-neutral-500">TRY IT</span>
@@ -585,7 +883,7 @@
                                 </p>
                             </div>
 
-                            <div class="feature-item p-4 cursor-pointer hover:bg-elevated/40 transition-colors" onclick="selectFeatureItem(4)">
+                            <div class="feature-item btn-tactile p-4 cursor-pointer hover:bg-elevated/40 transition-colors duration-150" onclick="selectFeatureItem(4)">
                                 <div class="flex items-center justify-between mb-1">
                                     <h3 class="text-sm font-semibold text-white">5. Save your favorite spots</h3>
                                     <span class="font-mono text-[10px] text-neutral-500">TRY IT</span>
@@ -628,16 +926,29 @@
             </div>
         </section>
 
-        <!-- Setup Steps -->
+        <!-- Setup Steps (Principle 14: Hick's Law — grouped by chosen tool with recommended path first) -->
         <section id="install" class="py-20 space-y-8">
             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div class="space-y-1">
                     <h2 class="text-lg font-semibold text-white tracking-tight">How to install</h2>
                     <p class="text-xs text-neutral-500">Takes less than two minutes. No jailbreak or computer cable needed.</p>
                 </div>
-                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="inline-flex items-center gap-2 text-xs font-mono text-white underline underline-offset-4 hover:text-neutral-300">
+                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" class="inline-flex items-center gap-2 min-h-[44px] text-xs font-mono text-white underline underline-offset-4 hover:text-neutral-300">
                     Download Latest .dylib &nearr;
                 </a>
+            </div>
+
+            <div class="install-tab-track bg-surface border border-hairline rounded-lg p-1 w-full sm:w-auto">
+                <div class="install-tab-pill" id="installTabPill"></div>
+                <button type="button" onclick="switchInstallMethod(0)" class="install-tab-btn relative z-10 px-3 sm:px-4 py-2 text-xs font-medium text-white rounded-md min-h-[38px]">
+                    LiveContainer <span class="hidden sm:inline text-[10px] font-mono text-iosGreen ml-1">REC</span>
+                </button>
+                <button type="button" onclick="switchInstallMethod(1)" class="install-tab-btn relative z-10 px-3 sm:px-4 py-2 text-xs font-medium text-neutral-400 rounded-md min-h-[38px]">
+                    Sideloadly
+                </button>
+                <button type="button" onclick="switchInstallMethod(2)" class="install-tab-btn relative z-10 px-3 sm:px-4 py-2 text-xs font-medium text-neutral-400 rounded-md min-h-[38px]">
+                    TrollStore
+                </button>
             </div>
 
             <div class="space-y-4">
@@ -654,9 +965,9 @@
                 <div class="flex items-start gap-4 pb-4 border-b border-hairline">
                     <span class="font-mono text-xs text-neutral-500 pt-0.5">02</span>
                     <div class="space-y-1">
-                        <h3 class="text-sm font-medium text-white">Inject it into your app</h3>
-                        <p class="text-xs text-neutral-400 leading-relaxed">
-                            In <strong class="text-neutral-200 font-medium">LiveContainer</strong>, put the <code class="font-mono text-neutral-200">.dylib</code> file in the app's Tweaks folder and turn it on. In <strong class="text-neutral-200 font-medium">Sideloadly</strong>, add it under Advanced Options before installing the IPA.
+                        <h3 class="text-sm font-medium text-white" id="installStep2Title">Add it to your LiveContainer Tweaks folder</h3>
+                        <p class="text-xs text-neutral-400 leading-relaxed" id="installStep2Desc">
+                            In <strong class="text-neutral-200 font-medium">LiveContainer</strong>, create a folder in the Tweaks page, place <code class="font-mono text-neutral-200">.dylib</code> inside it, and select that tweak folder in your app's settings.
                         </p>
                     </div>
                 </div>
@@ -673,40 +984,52 @@
             </div>
         </section>
 
-        <!-- FAQ Accordion -->
+        <!-- FAQ Accordion (Principle 18: Fast Closing) -->
         <section class="pb-20 space-y-6">
             <h2 class="text-lg font-semibold text-white tracking-tight">Questions</h2>
 
             <div class="border-t border-hairline divide-y divide-hairline">
-                <details class="group py-4" open>
-                    <summary class="flex items-center justify-between cursor-pointer text-sm font-medium text-white">
+                <div class="faq-item py-2" data-open="true">
+                    <button type="button" onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left py-2.5 min-h-[44px] text-sm font-medium text-white">
                         <span>Do I need a jailbreak or a computer plugged in?</span>
-                        <span class="plus-icon font-mono text-neutral-500 transition-transform duration-150">+</span>
-                    </summary>
-                    <p class="pt-2.5 text-xs text-neutral-400 leading-relaxed pr-6">
-                        No. Once the file is added to your app using LiveContainer, TrollStore, or Sideloadly, everything runs right on your iPhone. You never need to plug into a PC or Mac.
-                    </p>
-                </details>
+                        <span class="plus-icon font-mono text-neutral-500 ml-4">+</span>
+                    </button>
+                    <div class="faq-body">
+                        <div class="faq-inner">
+                            <p class="pb-3 text-xs text-neutral-400 leading-relaxed pr-6">
+                                No. Once the file is added to your app using LiveContainer, TrollStore, or Sideloadly, everything runs right on your iPhone. You never need to plug into a PC or Mac.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <details class="group py-4">
-                    <summary class="flex items-center justify-between cursor-pointer text-sm font-medium text-white">
+                <div class="faq-item py-2" data-open="false">
+                    <button type="button" onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left py-2.5 min-h-[44px] text-sm font-medium text-white">
                         <span>Does this change my location for my whole iPhone?</span>
-                        <span class="plus-icon font-mono text-neutral-500 transition-transform duration-150">+</span>
-                    </summary>
-                    <p class="pt-2.5 text-xs text-neutral-400 leading-relaxed pr-6">
-                        No. Because iOS keeps apps separate, LSpoof+ only changes the location for the specific app you add it to. Your real Apple Maps, Find My, and system GPS stay normal.
-                    </p>
-                </details>
+                        <span class="plus-icon font-mono text-neutral-500 ml-4">+</span>
+                    </button>
+                    <div class="faq-body">
+                        <div class="faq-inner">
+                            <p class="pb-3 text-xs text-neutral-400 leading-relaxed pr-6">
+                                No. Because iOS keeps apps separate, LSpoof+ only changes the location for the specific app you add it to. Your real Apple Maps, Find My, and system GPS stay normal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <details class="group py-4">
-                    <summary class="flex items-center justify-between cursor-pointer text-sm font-medium text-white">
+                <div class="faq-item py-2" data-open="false">
+                    <button type="button" onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left py-2.5 min-h-[44px] text-sm font-medium text-white">
                         <span>How do I hide or reopen the menu?</span>
-                        <span class="plus-icon font-mono text-neutral-500 transition-transform duration-150">+</span>
-                    </summary>
-                    <p class="pt-2.5 text-xs text-neutral-400 leading-relaxed pr-6">
-                        Tap the <span class="text-neutral-200">&times;</span> button in the top-right corner to hide it. Whenever you want it back, hold three fingers anywhere on the screen for 0.8 seconds.
-                    </p>
-                </details>
+                        <span class="plus-icon font-mono text-neutral-500 ml-4">+</span>
+                    </button>
+                    <div class="faq-body">
+                        <div class="faq-inner">
+                            <p class="pb-3 text-xs text-neutral-400 leading-relaxed pr-6">
+                                Tap the <span class="text-neutral-200">&times;</span> button in the top-right corner to hide it. Whenever you want it back, hold three fingers anywhere on the screen for 0.8 seconds.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -719,19 +1042,24 @@
                 MIT License &bull; Maintained by <a href="https://github.com/getsentrix" target="_blank" rel="noreferrer" class="text-neutral-300 hover:text-white transition-colors">@getsentrix</a>
             </div>
             <div class="flex items-center gap-5 font-mono text-[11px]">
-                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="hover:text-white transition-colors">GitHub</a>
-                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" target="_blank" rel="noreferrer" class="hover:text-white transition-colors">Releases</a>
-                <a href="https://www.virustotal.com/gui/file/d066fdeb8dd1a3ad9f8b99792e83032a35e12287eab29d8d7d9aa568c8e480fa/detection" target="_blank" rel="noreferrer" class="hover:text-white transition-colors">VirusTotal</a>
+                <a href="https://github.com/getsentrix/LSpoof-Plus" target="_blank" rel="noreferrer" class="inline-flex items-center min-h-[44px] hover:text-white transition-colors">GitHub</a>
+                <a href="https://github.com/getsentrix/LSpoof-Plus/releases/latest" target="_blank" rel="noreferrer" class="inline-flex items-center min-h-[44px] hover:text-white transition-colors">Releases</a>
+                <a href="https://www.virustotal.com/gui/file/d066fdeb8dd1a3ad9f8b99792e83032a35e12287eab29d8d7d9aa568c8e480fa/detection" target="_blank" rel="noreferrer" class="inline-flex items-center min-h-[44px] hover:text-white transition-colors">VirusTotal</a>
             </div>
         </div>
     </footer>
 
     <!-- Toast Notification -->
-    <div class="toast" id="toast">
+    <div class="toast" id="toast" role="status" aria-live="polite">
         <span id="toastMsg">Done</span>
     </div>
 
     <script>
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        function prefersReducedMotion() {
+            return motionQuery.matches;
+        }
+
         let toastTimeout = null;
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -743,18 +1071,56 @@
             toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
         }
 
+        /* Principle 10: Subtle 3D tilt on desktop pointer over iPhone stage */
+        const phoneStage = document.getElementById('phoneStage');
+        const phoneBezel = document.getElementById('phoneBezel');
+        let isDraggingPin = false;
+
+        if (phoneStage && phoneBezel) {
+            phoneStage.addEventListener('pointermove', (e) => {
+                if (prefersReducedMotion() || isDraggingPin || e.pointerType !== 'mouse') return;
+                const rect = phoneBezel.getBoundingClientRect();
+                const nx = (e.clientX - rect.left) / rect.width - 0.5;
+                const ny = (e.clientY - rect.top) / rect.height - 0.5;
+                const rotY = (nx * 9).toFixed(2);
+                const rotX = (-ny * 7).toFixed(2);
+                phoneBezel.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            });
+            phoneStage.addEventListener('pointerleave', () => {
+                phoneBezel.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            });
+        }
+
+        /* Principle 1: Interruptible stretch on iOS switch knob */
+        function pulseSwitchStretch(sw) {
+            if (!sw || prefersReducedMotion()) return;
+            sw.classList.add('is-stretching');
+            clearTimeout(sw._stretchTimer);
+            sw._stretchTimer = setTimeout(() => sw.classList.remove('is-stretching'), 110);
+        }
+
         function toggleDemoSpoofSwitch() {
             const sw = document.getElementById('demoHeroSwitch');
             const dot = document.getElementById('demoHeroDot');
+            const islandDot = document.getElementById('islandDot');
             const title = document.getElementById('demoHeroTitle');
             const sub = document.getElementById('demoHeroSub');
             const telemStatus = document.getElementById('telemetryStatus');
 
             sw.classList.toggle('on');
+            pulseSwitchStretch(sw);
             const isOn = sw.classList.contains('on');
+
+            if (!prefersReducedMotion()) {
+                dot.classList.add('pop');
+                clearTimeout(dot._popTimer);
+                dot._popTimer = setTimeout(() => dot.classList.remove('pop'), 180);
+            }
 
             if (isOn) {
                 dot.style.background = '#30D158';
+                islandDot.classList.remove('bg-amber-400');
+                islandDot.classList.add('bg-iosGreen');
                 title.innerText = 'Spoofing On';
                 sub.innerText = 'Using your custom GPS pin';
                 telemStatus.innerText = 'ACTIVE';
@@ -762,6 +1128,8 @@
                 showToast('Spoofing turned on.');
             } else {
                 dot.style.background = '#FF9F0A';
+                islandDot.classList.remove('bg-iosGreen');
+                islandDot.classList.add('bg-amber-400');
                 title.innerText = 'Spoofing Off';
                 sub.innerText = 'Using your real iPhone GPS';
                 telemStatus.innerText = 'OFF';
@@ -775,9 +1143,13 @@
             const row = document.getElementById('demoSliderRow');
             const circle = document.getElementById('demoDriftCircle');
             sw.classList.toggle('on');
+            pulseSwitchStretch(sw);
             const isOn = sw.classList.contains('on');
             row.style.display = isOn ? 'block' : 'none';
-            if (circle) circle.style.display = isOn ? 'block' : 'none';
+            if (circle) {
+                circle.style.opacity = isOn ? '1' : '0';
+                circle.style.display = isOn ? 'block' : 'none';
+            }
             showToast(isOn ? 'GPS drift enabled.' : 'GPS drift disabled.');
         }
 
@@ -795,6 +1167,7 @@
             const sw = document.getElementById(id);
             if (sw) {
                 sw.classList.toggle('on');
+                pulseSwitchStretch(sw);
                 showToast('Setting updated.');
             }
         }
@@ -804,6 +1177,7 @@
             const screen = document.getElementById('phoneScreen');
             if (!sw || !screen) return;
             sw.classList.toggle('on');
+            pulseSwitchStretch(sw);
             if (sw.classList.contains('on')) {
                 screen.classList.remove('phone-light-theme');
                 showToast('Dark mode on.');
@@ -813,29 +1187,162 @@
             }
         }
 
+        /* Principles 11 & 18: Origin-aware Search & Speed Popovers */
+        function closeAllPopovers() {
+            const searchPop = document.getElementById('demoSearchPopover');
+            const speedPop = document.getElementById('demoSpeedPopover');
+            if (searchPop) {
+                searchPop.classList.remove('open', 'stagger-visible');
+            }
+            if (speedPop) {
+                speedPop.classList.remove('open');
+            }
+        }
+
+        function toggleSearchPopover(e) {
+            if (e) e.stopPropagation();
+            const pop = document.getElementById('demoSearchPopover');
+            const speedPop = document.getElementById('demoSpeedPopover');
+            if (speedPop) speedPop.classList.remove('open');
+            const willOpen = !pop.classList.contains('open');
+            pop.classList.toggle('open', willOpen);
+            if (willOpen) {
+                requestAnimationFrame(() => pop.classList.add('stagger-visible'));
+            } else {
+                pop.classList.remove('stagger-visible');
+            }
+        }
+
+        function toggleSpeedPopover(e) {
+            if (e) e.stopPropagation();
+            const pop = document.getElementById('demoSpeedPopover');
+            const searchPop = document.getElementById('demoSearchPopover');
+            if (searchPop) searchPop.classList.remove('open', 'stagger-visible');
+            pop.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            const searchWrap = document.getElementById('demoSearchWrap');
+            const speedPop = document.getElementById('demoSpeedPopover');
+            if (searchWrap && !searchWrap.contains(e.target)) {
+                const sp = document.getElementById('demoSearchPopover');
+                if (sp) sp.classList.remove('open', 'stagger-visible');
+            }
+            if (speedPop && !speedPop.parentElement.contains(e.target)) {
+                speedPop.classList.remove('open');
+            }
+        });
+
+        /* Pin Movement with Arc (Principle 6) + Interruptible Squash (Principle 1 & 17) */
+        let squashTimer = null;
+        function movePinToPct(pctX, pctY, labelText) {
+            const pinEl = document.getElementById('demoPin');
+            const circle = document.getElementById('demoDriftCircle');
+            const mapEl = document.getElementById('demoMap');
+
+            pinEl.style.left = pctX + '%';
+            pinEl.style.top = pctY + '%';
+            circle.style.left = pctX + '%';
+            circle.style.top = pctY + '%';
+
+            if (!prefersReducedMotion()) {
+                clearTimeout(squashTimer);
+                pinEl.classList.remove('pin-squash');
+                squashTimer = setTimeout(() => {
+                    pinEl.classList.add('pin-squash');
+                    squashTimer = setTimeout(() => pinEl.classList.remove('pin-squash'), 120);
+                }, 230);
+
+                const ring = document.createElement('div');
+                ring.className = 'map-radar-ring';
+                ring.style.left = pctX + '%';
+                ring.style.top = pctY + '%';
+                mapEl.appendChild(ring);
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => ring.classList.add('expand'));
+                });
+                setTimeout(() => ring.remove(), 540);
+            }
+
+            const lat = (37.774900 + (50 - pctY) * 0.0018).toFixed(6);
+            const lon = (-122.419400 + (pctX - 50) * 0.0018).toFixed(6);
+            flashCoords(lat, lon);
+            document.getElementById('demoMapHint').innerText = labelText || (lat + ', ' + lon);
+        }
+
+        function flashCoords(lat, lon) {
+            const latInput = document.getElementById('demoLat');
+            const lonInput = document.getElementById('demoLon');
+            latInput.value = lat;
+            lonInput.value = lon;
+            latInput.classList.add('flash-val');
+            lonInput.classList.add('flash-val');
+            clearTimeout(latInput._flashTimer);
+            latInput._flashTimer = setTimeout(() => {
+                latInput.classList.remove('flash-val');
+                lonInput.classList.remove('flash-val');
+            }, 420);
+        }
+
+        function pickSearchCity(name, lat, lon, pctX, pctY) {
+            closeAllPopovers();
+            document.getElementById('demoSearchText').innerText = name;
+            movePinToPct(pctX, pctY, name);
+            flashCoords(lat.toFixed(6), lon.toFixed(6));
+            showToast('Moved to ' + name);
+        }
+
+        /* Principles 3, 4, 5: Sliding Segmented Pill + Follow-through + Staggered Bookmarks */
         function switchPhoneTab(tab) {
+            closeAllPopovers();
             const staticDiv = document.getElementById('phoneTabStatic');
             const routeDiv = document.getElementById('phoneTabRoute');
             const bmarksDiv = document.getElementById('phoneTabBookmarks');
-            const searchEl = document.getElementById('demoSearchBar');
+            const bmarksList = document.getElementById('bookmarksList');
+            const searchWrap = document.getElementById('demoSearchWrap');
             const routeSvg = document.getElementById('demoRouteSvg');
             const pinEl = document.getElementById('demoPin');
             const driftCircle = document.getElementById('demoDriftCircle');
             const btns = document.querySelectorAll('.ios-segment-btn');
+            const pill = document.getElementById('segmentPill');
 
             btns.forEach(b => {
-                b.classList.remove('active', 'bg-[#1B1C20]', 'text-white');
+                b.classList.remove('active', 'text-white');
                 b.classList.add('text-neutral-400');
             });
 
             const activeIdx = tab === 'static' ? 0 : tab === 'route' ? 1 : 2;
-            btns[activeIdx].classList.add('active', 'bg-[#1B1C20]', 'text-white');
+            btns[activeIdx].classList.add('active', 'text-white');
             btns[activeIdx].classList.remove('text-neutral-400');
+            if (pill) {
+                pill.style.transform = `translateX(${activeIdx * 100}%)`;
+            }
 
-            staticDiv.style.display = tab === 'static' ? 'block' : 'none';
-            routeDiv.style.display = tab === 'route' ? 'block' : 'none';
-            bmarksDiv.style.display = tab === 'bookmarks' ? 'block' : 'none';
-            searchEl.style.display = tab === 'static' ? 'flex' : 'none';
+            const panels = { static: staticDiv, route: routeDiv, bookmarks: bmarksDiv };
+            Object.entries(panels).forEach(([key, el]) => {
+                if (key === tab) {
+                    el.style.display = 'block';
+                    if (!prefersReducedMotion()) {
+                        el.classList.add('entering');
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => el.classList.remove('entering'));
+                        });
+                    }
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+
+            if (bmarksList) {
+                bmarksList.classList.remove('stagger-visible');
+                if (tab === 'bookmarks') {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => bmarksList.classList.add('stagger-visible'));
+                    });
+                }
+            }
+
+            searchWrap.style.display = tab === 'static' ? 'block' : 'none';
 
             if (tab === 'route') {
                 routeSvg.style.display = 'block';
@@ -849,42 +1356,41 @@
             }
         }
 
-        function selectBookmark(name, lat, lon) {
-            const latInput = document.getElementById('demoLat');
-            const lonInput = document.getElementById('demoLon');
-            const pinEl = document.getElementById('demoPin');
-            const circle = document.getElementById('demoDriftCircle');
-            const mapHint = document.getElementById('demoMapHint');
-            const mapEl = document.getElementById('demoMap');
-
-            latInput.value = lat.toFixed(6);
-            lonInput.value = lon.toFixed(6);
-            latInput.classList.add('flash-val');
-            lonInput.classList.add('flash-val');
+        function selectBookmark(name, lat, lon, pctX, pctY) {
+            switchPhoneTab('static');
             setTimeout(() => {
-                latInput.classList.remove('flash-val');
-                lonInput.classList.remove('flash-val');
-            }, 500);
-
-            pinEl.style.left = '50%';
-            pinEl.style.top = '50%';
-            pinEl.classList.remove('pin-drop');
-            void pinEl.offsetWidth;
-            pinEl.classList.add('pin-drop');
-
-            circle.style.left = '50%';
-            circle.style.top = '50%';
-
-            const ring = document.createElement('div');
-            ring.className = 'map-radar-ring';
-            ring.style.left = '50%';
-            ring.style.top = '50%';
-            mapEl.appendChild(ring);
-            setTimeout(() => ring.remove(), 750);
-
-            mapHint.innerText = name + ' • ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
+                movePinToPct(pctX || 50, pctY || 50, name + ' • ' + lat.toFixed(2) + ', ' + lon.toFixed(2));
+                flashCoords(lat.toFixed(6), lon.toFixed(6));
+            }, prefersReducedMotion() ? 0 : 80);
             showToast('Moved to ' + name);
-            setTimeout(() => switchPhoneTab('static'), 300);
+        }
+
+        /* Principle 19: Peak-End Rule on Save Settings */
+        let saveResetTimer = null;
+        function handleDemoSave() {
+            const btn = document.getElementById('demoSaveBtn');
+            const icon = document.getElementById('demoSaveIcon');
+            const text = document.getElementById('demoSaveText');
+            const dot = document.getElementById('demoHeroDot');
+
+            btn.classList.remove('is-saved');
+            void btn.offsetWidth;
+            icon.classList.remove('hidden');
+            btn.classList.add('is-saved');
+            text.innerText = 'Saved';
+
+            if (!prefersReducedMotion()) {
+                dot.classList.add('pop');
+                setTimeout(() => dot.classList.remove('pop'), 200);
+            }
+
+            showToast('Location saved.');
+            clearTimeout(saveResetTimer);
+            saveResetTimer = setTimeout(() => {
+                btn.classList.remove('is-saved');
+                icon.classList.add('hidden');
+                text.innerText = 'Save Settings';
+            }, 1350);
         }
 
         const speedProfiles = [
@@ -894,10 +1400,12 @@
         ];
         let currentSpeedIdx = 1;
 
-        function cycleDemoSpeed() {
-            currentSpeedIdx = (currentSpeedIdx + 1) % speedProfiles.length;
-            const profile = speedProfiles[currentSpeedIdx];
+        function setDemoSpeed(idx, e) {
+            if (e) e.stopPropagation();
+            currentSpeedIdx = idx;
+            const profile = speedProfiles[idx];
             document.getElementById('demoSpeedLabel').innerText = profile.name + ' ▾';
+            closeAllPopovers();
             showToast('Speed set to ' + profile.name);
             if (routeSimInterval) {
                 clearInterval(routeSimInterval);
@@ -936,6 +1444,19 @@
         function toggleDemoRouteSimulation() {
             const playBtn = document.getElementById('demoRoutePlayBtn');
             const pBox = document.getElementById('demoRouteProgressBox');
+            const heroSwitch = document.getElementById('demoHeroSwitch');
+            const heroCard = document.getElementById('demoHeroCard');
+
+            /* Principle 9: Exaggerated 3-shake if spoofing is turned off */
+            if (!heroSwitch.classList.contains('on')) {
+                if (!prefersReducedMotion()) {
+                    heroCard.classList.remove('shake-3x');
+                    void heroCard.offsetWidth;
+                    heroCard.classList.add('shake-3x');
+                }
+                showToast('Turn on Spoofing first to start a route.');
+                return;
+            }
 
             if (routeSimInterval) {
                 clearInterval(routeSimInterval);
@@ -970,22 +1491,16 @@
                 toggleDemoSpoofSwitch();
             } else if (idx === 1) {
                 switchPhoneTab('static');
-                const pinEl = document.getElementById('demoPin');
-                const circle = document.getElementById('demoDriftCircle');
-                pinEl.style.left = '50%';
-                pinEl.style.top = '50%';
-                pinEl.classList.remove('pin-drop');
-                void pinEl.offsetWidth;
-                pinEl.classList.add('pin-drop');
-                circle.style.left = '50%';
-                circle.style.top = '50%';
-                showToast('Tap anywhere on the map to move the pin.');
+                movePinToPct(50, 50, 'San Francisco, CA');
+                showToast('Tap or drag the pin anywhere on the map.');
             } else if (idx === 2) {
                 switchPhoneTab('static');
                 const sw = document.getElementById('demoFluctSwitch');
                 if (!sw.classList.contains('on')) toggleDemoFluctRow();
                 showToast('Drag the slider to adjust GPS drift.');
             } else if (idx === 3) {
+                const heroSw = document.getElementById('demoHeroSwitch');
+                if (!heroSw.classList.contains('on')) toggleDemoSpoofSwitch();
                 switchPhoneTab('route');
                 if (!routeSimInterval) toggleDemoRouteSimulation();
             } else if (idx === 4) {
@@ -993,50 +1508,122 @@
             }
         }
 
+        /* Principle 13: Rubber Banding when dragging pin past map bounds */
         const mapEl = document.getElementById('demoMap');
-        mapEl.addEventListener('click', function(e) {
-            const routeSvg = document.getElementById('demoRouteSvg');
-            if (routeSvg.style.display === 'block') return;
+        const pinEl = document.getElementById('demoPin');
+        const driftCircle = document.getElementById('demoDriftCircle');
 
+        function rubberBand(overshoot, size) {
+            const sign = overshoot >= 0 ? 1 : -1;
+            const d = Math.abs(overshoot);
+            return sign * (1 - 1 / (d * 0.55 / size + 1)) * size;
+        }
+
+        let dragMoved = false;
+
+        mapEl.addEventListener('pointerdown', (e) => {
+            if (document.getElementById('demoRouteSvg').style.display === 'block') return;
+            if (e.target.closest('#demoPin')) {
+                isDraggingPin = true;
+                dragMoved = false;
+                mapEl.setPointerCapture(e.pointerId);
+                pinEl.classList.add('is-dragging');
+                driftCircle.classList.add('is-dragging');
+                if (phoneBezel) phoneBezel.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            }
+        });
+
+        mapEl.addEventListener('pointermove', (e) => {
+            if (!isDraggingPin) return;
+            dragMoved = true;
+            const rect = mapEl.getBoundingClientRect();
+            const rawX = ((e.clientX - rect.left) / rect.width) * 100;
+            const rawY = ((e.clientY - rect.top) / rect.height) * 100;
+
+            let clampedX = rawX;
+            if (rawX < 10) clampedX = 10 + rubberBand(rawX - 10, 14);
+            else if (rawX > 90) clampedX = 90 + rubberBand(rawX - 90, 14);
+
+            let clampedY = rawY;
+            if (rawY < 16) clampedY = 16 + rubberBand(rawY - 16, 14);
+            else if (rawY > 84) clampedY = 84 + rubberBand(rawY - 84, 14);
+
+            pinEl.style.left = clampedX + '%';
+            pinEl.style.top = clampedY + '%';
+            driftCircle.style.left = clampedX + '%';
+            driftCircle.style.top = clampedY + '%';
+
+            const boundedX = Math.max(10, Math.min(90, rawX));
+            const boundedY = Math.max(16, Math.min(84, rawY));
+            const lat = (37.774900 + (50 - boundedY) * 0.0018).toFixed(6);
+            const lon = (-122.419400 + (boundedX - 50) * 0.0018).toFixed(6);
+            document.getElementById('demoLat').value = lat;
+            document.getElementById('demoLon').value = lon;
+            document.getElementById('demoMapHint').innerText = lat + ', ' + lon;
+        });
+
+        function finishPinDrag(e) {
+            if (!isDraggingPin) return;
+            isDraggingPin = false;
+            pinEl.classList.remove('is-dragging');
+            driftCircle.classList.remove('is-dragging');
+            const rect = mapEl.getBoundingClientRect();
+            const rawX = ((e.clientX - rect.left) / rect.width) * 100;
+            const rawY = ((e.clientY - rect.top) / rect.height) * 100;
+            const finalX = Math.max(10, Math.min(90, rawX));
+            const finalY = Math.max(16, Math.min(84, rawY));
+            movePinToPct(finalX, finalY);
+        }
+
+        mapEl.addEventListener('pointerup', finishPinDrag);
+        mapEl.addEventListener('pointercancel', finishPinDrag);
+
+        mapEl.addEventListener('click', (e) => {
+            if (dragMoved) {
+                dragMoved = false;
+                return;
+            }
+            if (document.getElementById('demoRouteSvg').style.display === 'block') return;
             const rect = mapEl.getBoundingClientRect();
             const pctX = Math.max(10, Math.min(90, ((e.clientX - rect.left) / rect.width) * 100));
             const pctY = Math.max(16, Math.min(84, ((e.clientY - rect.top) / rect.height) * 100));
-
-            const pinEl = document.getElementById('demoPin');
-            const circle = document.getElementById('demoDriftCircle');
-
-            pinEl.style.left = pctX + '%';
-            pinEl.style.top = pctY + '%';
-            pinEl.classList.remove('pin-drop');
-            void pinEl.offsetWidth;
-            pinEl.classList.add('pin-drop');
-
-            circle.style.left = pctX + '%';
-            circle.style.top = pctY + '%';
-
-            const ring = document.createElement('div');
-            ring.className = 'map-radar-ring';
-            ring.style.left = pctX + '%';
-            ring.style.top = pctY + '%';
-            mapEl.appendChild(ring);
-            setTimeout(() => ring.remove(), 750);
-
-            const lat = (37.774900 + (50 - pctY) * 0.0018).toFixed(6);
-            const lon = (-122.419400 + (pctX - 50) * 0.0018).toFixed(6);
-
-            const latInput = document.getElementById('demoLat');
-            const lonInput = document.getElementById('demoLon');
-            latInput.value = lat;
-            lonInput.value = lon;
-            latInput.classList.add('flash-val');
-            lonInput.classList.add('flash-val');
-            setTimeout(() => {
-                latInput.classList.remove('flash-val');
-                lonInput.classList.remove('flash-val');
-            }, 450);
-
-            document.getElementById('demoMapHint').innerText = lat + ', ' + lon;
+            movePinToPct(pctX, pctY);
         });
+
+        /* Install Platform Switcher (Principle 14: Hick's Law) */
+        const installSteps = [
+            {
+                title: 'Add it to your LiveContainer Tweaks folder',
+                html: 'In <strong class="text-neutral-200 font-medium">LiveContainer</strong>, create a folder in the Tweaks page, place <code class="font-mono text-neutral-200">.dylib</code> inside it, and select that tweak folder in your app\'s settings.'
+            },
+            {
+                title: 'Inject it with Sideloadly',
+                html: 'Drag your target <code class="font-mono text-neutral-200">.ipa</code> into <strong class="text-neutral-200 font-medium">Sideloadly</strong>, expand <strong class="text-neutral-200 font-medium">Advanced Options &rarr; Inject Dylibs</strong>, add <code class="font-mono text-neutral-200">LocationSpoofer.dylib</code>, and click Start.'
+            },
+            {
+                title: 'Inject with Azule & install in TrollStore',
+                html: 'Run <code class="font-mono text-neutral-200 bg-surface px-1.5 py-0.5 rounded border border-hairline">azule -i App.ipa -o Spoofed.ipa -f LocationSpoofer.dylib</code> and install the output <code class="font-mono text-neutral-200">.ipa</code> directly in <strong class="text-neutral-200 font-medium">TrollStore</strong>.'
+            }
+        ];
+
+        function switchInstallMethod(idx) {
+            const pill = document.getElementById('installTabPill');
+            const btns = document.querySelectorAll('.install-tab-btn');
+            if (pill) pill.style.transform = `translateX(${idx * 100}%)`;
+            btns.forEach((b, i) => {
+                b.classList.toggle('text-white', i === idx);
+                b.classList.toggle('text-neutral-400', i !== idx);
+            });
+            document.getElementById('installStep2Title').innerText = installSteps[idx].title;
+            document.getElementById('installStep2Desc').innerHTML = installSteps[idx].html;
+        }
+
+        /* FAQ Smooth Accordion Toggle (Principle 18: Fast Closing) */
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            const isOpen = item.getAttribute('data-open') === 'true';
+            item.setAttribute('data-open', isOpen ? 'false' : 'true');
+        }
     </script>
 </body>
 </html>

@@ -979,9 +979,13 @@
     if (animated) {
         self.searchBarHeightConstraint.constant = 0.0;
         self.searchBarBottomConstraint.constant = 0.0;
-        [UIView animateWithDuration:0.24 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.2 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+        BOOL reduceMotion = UIAccessibilityIsReduceMotionEnabled();
+        NSTimeInterval duration = reduceMotion ? 0.08 : 0.14;
+        [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionCurveEaseIn | UIViewAnimationOptionBeginFromCurrentState animations:^{
             self.searchBar.alpha = 0.0;
-            self.searchBar.transform = CGAffineTransformMakeTranslation(0, -6.0);
+            if (!reduceMotion) {
+                self.searchBar.transform = CGAffineTransformMakeTranslation(0, -6.0);
+            }
             [self ls_updateTableHeaderLayout];
         } completion:completionBlock];
     } else {
