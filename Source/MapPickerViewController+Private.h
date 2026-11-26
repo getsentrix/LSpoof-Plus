@@ -168,18 +168,32 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 + (UIColor *)neumorphicSurfaceColor;
 + (UIColor *)neumorphicHighlightColor;
 + (UIColor *)neumorphicShadowColor;
++ (void)applyGroupedCellStyleToCell:(UITableViewCell *)cell traitCollection:(nullable UITraitCollection *)traitCollection;
 + (void)applyNeumorphicCardStyleToView:(UIView *)view cornerRadius:(CGFloat)radius;
 + (void)updateNeumorphicShadowPathForView:(UIView *)view cornerRadius:(CGFloat)radius;
 + (void)refreshNeumorphicStyleForView:(UIView *)view cornerRadius:(CGFloat)radius;
++ (void)refreshNeumorphicStyleForView:(UIView *)view cornerRadius:(CGFloat)radius traitCollection:(nullable UITraitCollection *)traitCollection;
 + (void)applyDebossedWellStyleToField:(UITextField *)field;
++ (void)applyDebossedWellStyleToField:(UITextField *)field traitCollection:(nullable UITraitCollection *)traitCollection;
++ (void)configureActionButton:(UIButton *)button
+                        title:(NSString *)title
+                   symbolName:(nullable NSString *)symbolName
+                   symbolSize:(CGFloat)symbolSize
+                         font:(UIFont *)font
+              foregroundColor:(UIColor *)fgColor;
++ (void)refreshActionButton:(UIButton *)button
+            foregroundColor:(UIColor *)fgColor
+            traitCollection:(nullable UITraitCollection *)traitCollection;
 + (void)makeButtonTactileNeumorphic:(UIButton *)button
                           baseColor:(UIColor *)baseColor
                      highlightColor:(UIColor *)hiColor
                         shadowColor:(UIColor *)shColor
                        cornerRadius:(CGFloat)radius;
+- (UITraitCollection *)ls_effectiveTraitCollection;
 - (void)handleButtonTouchDown:(UIButton *)sender;
 - (void)handleButtonTouchUp:(UIButton *)sender;
 - (void)refreshNeumorphicColors;
+- (void)refreshNeumorphicColorsForTraitCollection:(UITraitCollection *)traitCollection;
 - (void)refreshStatusPill;
 - (void)handleStatusPillTapped;
 - (void)syncFieldsFromCoordinate;
@@ -244,6 +258,7 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 - (UITableViewCell *)ls_routeCellForRowAtIndexPath:(NSIndexPath *)indexPath;
 - (void)ls_routeDidSelectRowAtIndexPath:(NSIndexPath *)indexPath;
 - (void)ls_refreshRouteNeumorphicStyles;
+- (void)ls_refreshRouteNeumorphicStylesForTraitCollection:(nullable UITraitCollection *)traitCollection;
 
 @end
 
@@ -267,6 +282,7 @@ typedef NS_ENUM(NSInteger, LSRouteWaypointTarget) {
 - (nullable UIView *)ls_bookmarksHeaderForSection:(NSInteger)section;
 - (void)ls_presentStaticMapActionSheetAtCoordinate:(CLLocationCoordinate2D)coordinate;
 - (void)ls_refreshBookmarksNeumorphicStyles;
+- (void)ls_refreshBookmarksNeumorphicStylesForTraitCollection:(nullable UITraitCollection *)traitCollection;
 
 @end
 

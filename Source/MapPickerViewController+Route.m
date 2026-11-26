@@ -15,15 +15,14 @@
 
 - (void)buildRouteControls {
     // Get Route Button
-    self.getRouteButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.getRouteButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.getRouteButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.getRouteButton setTitle:@"  Get Route Directions" forState:UIControlStateNormal];
-    [self.getRouteButton setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-    self.getRouteButton.titleLabel.font = [UIFont systemFontOfSize:16.0 weight:UIFontWeightBold];
-    UIImage *routeIcon = [MapPickerViewController systemImageNamedWithFallback:@"arrow.triangle.turn.up.right.diamond.fill"
-                                                                 configuration:[UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIFontWeightBold]];
-    [self.getRouteButton setImage:routeIcon forState:UIControlStateNormal];
-    self.getRouteButton.tintColor = UIColor.whiteColor;
+    [MapPickerViewController configureActionButton:self.getRouteButton
+                                             title:@"Get Route Directions"
+                                        symbolName:@"arrow.triangle.turn.up.right.diamond.fill"
+                                        symbolSize:16.0
+                                              font:[UIFont systemFontOfSize:16.0 weight:UIFontWeightBold]
+                                   foregroundColor:UIColor.whiteColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.getRouteButton
                                                baseColor:UIColor.systemBlueColor
                                           highlightColor:[UIColor colorWithWhite:1.0 alpha:0.35]
@@ -31,7 +30,7 @@
                                             cornerRadius:16.0];
     [self.getRouteButton addTarget:self action:@selector(handleGetRouteTapped) forControlEvents:UIControlEventTouchUpInside];
     [self.getRouteButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
-    [self.getRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+    [self.getRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
     self.routeSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
     self.routeSpinner.translatesAutoresizingMaskIntoConstraints = NO;
@@ -85,15 +84,14 @@
     self.customSpeedField.inputAccessoryView = speedToolbar;
 
     // Play Route Button
-    self.playRouteButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.playRouteButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.playRouteButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.playRouteButton setTitle:@"  Start Simulation" forState:UIControlStateNormal];
-    [self.playRouteButton setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-    self.playRouteButton.titleLabel.font = [UIFont systemFontOfSize:16.0 weight:UIFontWeightBold];
-    UIImage *playIcon = [MapPickerViewController systemImageNamedWithFallback:@"play.fill"
-                                                                configuration:[UIImageSymbolConfiguration configurationWithPointSize:16.0 weight:UIFontWeightBold]];
-    [self.playRouteButton setImage:playIcon forState:UIControlStateNormal];
-    self.playRouteButton.tintColor = UIColor.whiteColor;
+    [MapPickerViewController configureActionButton:self.playRouteButton
+                                             title:@"Start Simulation"
+                                        symbolName:@"play.fill"
+                                        symbolSize:16.0
+                                              font:[UIFont systemFontOfSize:16.0 weight:UIFontWeightBold]
+                                   foregroundColor:UIColor.whiteColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.playRouteButton
                                                baseColor:UIColor.systemGreenColor
                                           highlightColor:[UIColor colorWithWhite:1.0 alpha:0.35]
@@ -101,18 +99,17 @@
                                             cornerRadius:16.0];
     [self.playRouteButton addTarget:self action:@selector(handlePlayRouteTapped) forControlEvents:UIControlEventTouchUpInside];
     [self.playRouteButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
-    [self.playRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+    [self.playRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
     // Pause Route Button
-    self.pauseRouteButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.pauseRouteButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.pauseRouteButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.pauseRouteButton setTitle:@"  Pause" forState:UIControlStateNormal];
-    [self.pauseRouteButton setTitleColor:UIColor.labelColor forState:UIControlStateNormal];
-    self.pauseRouteButton.titleLabel.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
-    UIImage *pauseIcon = [MapPickerViewController systemImageNamedWithFallback:@"pause.fill"
-                                                                 configuration:[UIImageSymbolConfiguration configurationWithPointSize:15.0 weight:UIFontWeightSemibold]];
-    [self.pauseRouteButton setImage:pauseIcon forState:UIControlStateNormal];
-    self.pauseRouteButton.tintColor = UIColor.labelColor;
+    [MapPickerViewController configureActionButton:self.pauseRouteButton
+                                             title:@"Pause"
+                                        symbolName:@"pause.fill"
+                                        symbolSize:15.0
+                                              font:[UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold]
+                                   foregroundColor:UIColor.labelColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.pauseRouteButton
                                                baseColor:[MapPickerViewController neumorphicSurfaceColor]
                                           highlightColor:[MapPickerViewController neumorphicHighlightColor]
@@ -120,32 +117,31 @@
                                             cornerRadius:16.0];
     [self.pauseRouteButton addTarget:self action:@selector(handlePauseRouteTapped) forControlEvents:UIControlEventTouchUpInside];
     [self.pauseRouteButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
-    [self.pauseRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+    [self.pauseRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
     // Stop Route Button
-    self.stopRouteButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.stopRouteButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopRouteButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.stopRouteButton setTitle:@"  Stop Route" forState:UIControlStateNormal];
-    [self.stopRouteButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
-    self.stopRouteButton.titleLabel.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold];
-    UIImage *stopIcon = [MapPickerViewController systemImageNamedWithFallback:@"stop.fill"
-                                                                configuration:[UIImageSymbolConfiguration configurationWithPointSize:15.0 weight:UIFontWeightSemibold]];
-    [self.stopRouteButton setImage:stopIcon forState:UIControlStateNormal];
-    self.stopRouteButton.tintColor = UIColor.systemRedColor;
+    [MapPickerViewController configureActionButton:self.stopRouteButton
+                                             title:@"Stop Route"
+                                        symbolName:@"stop.fill"
+                                        symbolSize:15.0
+                                              font:[UIFont systemFontOfSize:15.0 weight:UIFontWeightSemibold]
+                                   foregroundColor:UIColor.systemRedColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.stopRouteButton
-                                               baseColor:[UIColor.systemRedColor colorWithAlphaComponent:0.12]
+                                               baseColor:[UIColor.systemRedColor colorWithAlphaComponent:0.14]
                                           highlightColor:[UIColor colorWithWhite:1.0 alpha:0.20]
                                              shadowColor:[UIColor colorWithRed:0.65 green:0.0 blue:0.0 alpha:0.35]
                                             cornerRadius:16.0];
     [self.stopRouteButton addTarget:self action:@selector(handleStopRouteTapped) forControlEvents:UIControlEventTouchUpInside];
     [self.stopRouteButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
-    [self.stopRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+    [self.stopRouteButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
     // Build Retained Route Static Cells
     // Start cell
     self.routeStartCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.routeStartCell.selectionStyle = UITableViewCellSelectionStyleDefault;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.routeStartCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.routeStartCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *startBadge = [MapPickerViewController iconBadgeWithSymbolName:@"flag.fill" backgroundColor:UIColor.systemGreenColor];
     [self.routeStartCell.contentView addSubview:startBadge];
@@ -221,7 +217,7 @@
     // Dest cell
     self.routeDestCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.routeDestCell.selectionStyle = UITableViewCellSelectionStyleDefault;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.routeDestCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.routeDestCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *destBadge = [MapPickerViewController iconBadgeWithSymbolName:@"flag.checkered" backgroundColor:UIColor.systemRedColor];
     [self.routeDestCell.contentView addSubview:destBadge];
@@ -292,7 +288,7 @@
     // Transport mode cell
     self.routeTransportCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     self.routeTransportCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.routeTransportCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.routeTransportCell traitCollection:[self ls_effectiveTraitCollection]];
 
     [self.routeTransportCell.contentView addSubview:self.transportModeSegment];
     [NSLayoutConstraint activateConstraints:@[
@@ -306,7 +302,7 @@
     // Custom speed cell
     self.routeCustomSpeedCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     self.routeCustomSpeedCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.routeCustomSpeedCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.routeCustomSpeedCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *spdBadge = [MapPickerViewController iconBadgeWithSymbolName:@"speedometer" backgroundColor:UIColor.systemOrangeColor];
     [self.routeCustomSpeedCell.contentView addSubview:spdBadge];
@@ -1194,31 +1190,51 @@
 }
 
 - (void)ls_refreshRouteNeumorphicStyles {
-    if (self.routeStartCell) [MapPickerViewController refreshNeumorphicStyleForView:self.routeStartCell cornerRadius:14.0];
-    if (self.routeDestCell) [MapPickerViewController refreshNeumorphicStyleForView:self.routeDestCell cornerRadius:14.0];
-    if (self.routeTransportCell) [MapPickerViewController refreshNeumorphicStyleForView:self.routeTransportCell cornerRadius:14.0];
-    if (self.routeCustomSpeedCell) [MapPickerViewController refreshNeumorphicStyleForView:self.routeCustomSpeedCell cornerRadius:14.0];
-    if (self.customSpeedField) [MapPickerViewController applyDebossedWellStyleToField:self.customSpeedField];
+    [self ls_refreshRouteNeumorphicStylesForTraitCollection:[self ls_effectiveTraitCollection]];
+}
+
+- (void)ls_refreshRouteNeumorphicStylesForTraitCollection:(nullable UITraitCollection *)traitCollection {
+    UITraitCollection *tc = traitCollection ?: [self ls_effectiveTraitCollection];
+    BOOL isDark = (tc.userInterfaceStyle == UIUserInterfaceStyleDark);
+    if (self.routeStartCell) [MapPickerViewController applyGroupedCellStyleToCell:self.routeStartCell traitCollection:tc];
+    if (self.routeDestCell) [MapPickerViewController applyGroupedCellStyleToCell:self.routeDestCell traitCollection:tc];
+    if (self.routeTransportCell) [MapPickerViewController applyGroupedCellStyleToCell:self.routeTransportCell traitCollection:tc];
+    if (self.routeCustomSpeedCell) [MapPickerViewController applyGroupedCellStyleToCell:self.routeCustomSpeedCell traitCollection:tc];
+    if (self.customSpeedField) [MapPickerViewController applyDebossedWellStyleToField:self.customSpeedField traitCollection:tc];
 
     if (self.transportModeSegment) {
-        self.transportModeSegment.layer.borderColor = [MapPickerViewController neumorphicHighlightColor].CGColor;
+        self.transportModeSegment.backgroundColor = isDark
+            ? [UIColor colorWithRed:0.07 green:0.07 blue:0.09 alpha:0.95]
+            : [UIColor colorWithRed:0.86 green:0.88 blue:0.92 alpha:0.95];
+        self.transportModeSegment.selectedSegmentTintColor = isDark
+            ? [UIColor colorWithRed:0.20 green:0.20 blue:0.24 alpha:1.0]
+            : [UIColor colorWithWhite:1.0 alpha:0.98];
+        self.transportModeSegment.layer.borderColor = [[MapPickerViewController neumorphicHighlightColor] resolvedColorWithTraitCollection:tc].CGColor;
     }
     if (self.getRouteButton) {
+        self.getRouteButton.backgroundColor = [UIColor.systemBlueColor resolvedColorWithTraitCollection:tc];
         self.getRouteButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.35].CGColor;
         self.getRouteButton.layer.shadowColor = [UIColor colorWithRed:0.02 green:0.25 blue:0.65 alpha:0.45].CGColor;
+        [MapPickerViewController refreshActionButton:self.getRouteButton foregroundColor:UIColor.whiteColor traitCollection:tc];
         [MapPickerViewController updateNeumorphicShadowPathForView:self.getRouteButton cornerRadius:16.0];
     }
     if (self.playRouteButton) {
+        self.playRouteButton.backgroundColor = [UIColor.systemGreenColor resolvedColorWithTraitCollection:tc];
         self.playRouteButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.35].CGColor;
         self.playRouteButton.layer.shadowColor = [UIColor colorWithRed:0.0 green:0.40 blue:0.10 alpha:0.45].CGColor;
+        [MapPickerViewController refreshActionButton:self.playRouteButton foregroundColor:UIColor.whiteColor traitCollection:tc];
         [MapPickerViewController updateNeumorphicShadowPathForView:self.playRouteButton cornerRadius:16.0];
     }
     if (self.pauseRouteButton) {
-        [MapPickerViewController refreshNeumorphicStyleForView:self.pauseRouteButton cornerRadius:16.0];
+        [MapPickerViewController refreshNeumorphicStyleForView:self.pauseRouteButton cornerRadius:16.0 traitCollection:tc];
+        [MapPickerViewController refreshActionButton:self.pauseRouteButton foregroundColor:UIColor.labelColor traitCollection:tc];
     }
     if (self.stopRouteButton) {
+        UIColor *red = [UIColor.systemRedColor resolvedColorWithTraitCollection:tc];
+        self.stopRouteButton.backgroundColor = [red colorWithAlphaComponent:0.14];
         self.stopRouteButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.20].CGColor;
         self.stopRouteButton.layer.shadowColor = [UIColor colorWithRed:0.65 green:0.0 blue:0.0 alpha:0.35].CGColor;
+        [MapPickerViewController refreshActionButton:self.stopRouteButton foregroundColor:UIColor.systemRedColor traitCollection:tc];
         [MapPickerViewController updateNeumorphicShadowPathForView:self.stopRouteButton cornerRadius:16.0];
     }
 }

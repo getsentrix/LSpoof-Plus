@@ -69,17 +69,17 @@ jobs:
             if [[ "${{ github.ref }}" == refs/tags/* ]]; then
               TAG="${GITHUB_REF#refs/tags/}"
             else
-              TAG="v1.2.9"
+              TAG="v1.2.10"
             fi
           fi
           echo "Using tag: $TAG"
           cat << 'EOF' > notes.md
-          ## LSpoof+ v1.2.9
+          ## LSpoof+ v1.2.10
 
           ### What's New
-          - **UX Motion & Responsiveness**: Snappier tactile button press/release springs, top-anchored search suggestion transitions, and faster dismiss timings (`0.13s`–`0.14s`).
-          - **Touch Targets**: Expanded close button hit target to `44x44`pt for easier one-handed dismissal.
-          - **Accessibility**: Respects iOS Reduce Motion (`UIAccessibilityIsReduceMotionEnabled`) across shakes, bounces, and spring transforms.
+          - **Light & Dark Mode Polish**: Fixed stale cell backgrounds and overlapping shadow artifacts when switching Appearance between System, Light, and Dark.
+          - **Save Settings & Action Buttons**: Fixed invisible checkmark icon on Save Settings and centered icons across all action buttons.
+          - **Appearance Row Layout**: Prevented "Appearance" label truncation on compact iPhone screens.
 
           ### Assets
           - `LocationSpoofer.dylib`: Dynamic library for LiveContainer, TrollStore, and Sideloadly (iOS 14.0+).

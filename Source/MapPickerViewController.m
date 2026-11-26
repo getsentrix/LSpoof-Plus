@@ -80,12 +80,27 @@ static const CGFloat kLSMapHeight = 220.0;
     LSAppearancePreference pref = store.appearancePreference;
     self.themeSegmentedControl.selectedSegmentIndex = (pref == LSAppearancePreferenceLight) ? 1 : ((pref == LSAppearancePreferenceDark) ? 2 : 0);
     self.darkModeSwitch.on = store.isEffectiveDarkMode;
+    if (@available(iOS 13.0, *)) {
+        self.overrideUserInterfaceStyle = store.isEffectiveDarkMode ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+    }
+    [self refreshNeumorphicColorsForTraitCollection:[self ls_effectiveTraitCollection]];
     [self updateHeroStatusCell];
     [self updateDriftRadiusOverlay];
 
+    if (@available(iOS 17.0, *)) {
+        SEL regSel = NSSelectorFromString(@"registerForTraitChanges:withAction:");
+        if (regSel && [self respondsToSelector:regSel]) {
+            [self registerForTraitChanges:@[[UITraitUserInterfaceStyle class]] withAction:@selector(ls_handleSystemTraitChange)];
+        }
+    }
 
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(ls_keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(ls_keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)ls_handleSystemTraitChange {
+    [self refreshNeumorphicColorsForTraitCollection:[self ls_effectiveTraitCollection]];
+    [self.tableView reloadData];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -112,7 +127,7 @@ static const CGFloat kLSMapHeight = 220.0;
     [super traitCollectionDidChange:previousTraitCollection];
     if (@available(iOS 13.0, *)) {
         if ([self.traitCollection hasDifferentColorAppearanceComparedToTraitCollection:previousTraitCollection]) {
-            [self refreshNeumorphicColors];
+            [self refreshNeumorphicColorsForTraitCollection:[self ls_effectiveTraitCollection]];
             [self.tableView reloadData];
         }
     }
@@ -206,49 +221,98 @@ static const CGFloat kLSMapHeight = 220.0;
 + (UIColor *)neumorphicBaseColor {
     return [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
         return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithRed:0.09 green:0.09 blue:0.11 alpha:0.92]
-            : [UIColor colorWithRed:0.91 green:0.92 blue:0.94 alpha:0.95];
+            ? [UIColor colorWithRed:0.09 green:0.09 blue:0.11 alpha:0.95]
+            : [UIColor colorWithRed:0.91 green:0.92 blue:0.95 alpha:0.96];
     }];
 }
 
 + (UIColor *)neumorphicSurfaceColor {
     return [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
         return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithRed:0.12 green:0.12 blue:0.15 alpha:0.92]
-            : [UIColor colorWithRed:0.93 green:0.94 blue:0.96 alpha:0.95];
+            ? [UIColor colorWithRed:0.14 green:0.14 blue:0.17 alpha:1.0]
+            : [UIColor colorWithRed:0.97 green:0.98 blue:1.00 alpha:1.0];
     }];
 }
 
 + (UIColor *)neumorphicHighlightColor {
     return [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
         return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithWhite:1.0 alpha:0.09]
-            : [UIColor colorWithWhite:1.0 alpha:0.75];
+            ? [UIColor colorWithWhite:1.0 alpha:0.08]
+            : [UIColor colorWithWhite:1.0 alpha:0.85];
     }];
 }
 
 + (UIColor *)neumorphicShadowColor {
     return [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
         return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithWhite:0.0 alpha:0.60]
-            : [UIColor colorWithRed:0.64 green:0.68 blue:0.75 alpha:0.38];
+            ? [UIColor colorWithWhite:0.0 alpha:0.55]
+            : [UIColor colorWithRed:0.64 green:0.68 blue:0.75 alpha:0.35];
     }];
+}
+
++ (UITraitCollection *)ls_resolvedTraitCollectionForView:(nullable UIView *)view {
+    if (@available(iOS 13.0, *)) {
+        if (view && view.traitCollection.userInterfaceStyle != UIUserInterfaceStyleUnspecified) {
+            return view.traitCollection;
+        }
+        BOOL isDark = [[PersistenceManager shared] isEffectiveDarkMode];
+        return [UITraitCollection traitCollectionWithUserInterfaceStyle:isDark ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight];
+    }
+    return UITraitCollection.currentTraitCollection;
+}
+
+- (UITraitCollection *)ls_effectiveTraitCollection {
+    if (@available(iOS 13.0, *)) {
+        UIUserInterfaceStyle style = self.overrideUserInterfaceStyle;
+        if (style == UIUserInterfaceStyleUnspecified) {
+            style = [[PersistenceManager shared] isEffectiveDarkMode] ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+        }
+        return [UITraitCollection traitCollectionWithUserInterfaceStyle:style];
+    }
+    return self.traitCollection;
+}
+
++ (void)applyGroupedCellStyleToCell:(UITableViewCell *)cell traitCollection:(nullable UITraitCollection *)traitCollection {
+    if (!cell) return;
+    UITraitCollection *tc = traitCollection ?: [self ls_resolvedTraitCollectionForView:cell];
+
+    if (cell.layer.sublayers) {
+        NSArray<CALayer *> *sublayers = [cell.layer.sublayers copy];
+        for (CALayer *sub in sublayers) {
+            if ([sub.name isEqualToString:@"LSNeumorphicHighlight"]) {
+                [sub removeFromSuperlayer];
+            }
+        }
+    }
+    cell.layer.shadowOpacity = 0.0;
+    cell.layer.shadowPath = NULL;
+    cell.layer.borderWidth = 0.0;
+    cell.layer.cornerRadius = 0.0;
+    cell.layer.shouldRasterize = NO;
+    cell.backgroundColor = UIColor.clearColor;
+    cell.contentView.backgroundColor = UIColor.clearColor;
+
+    UIBackgroundConfiguration *bgConfig = [UIBackgroundConfiguration listGroupedCellConfiguration];
+    bgConfig.backgroundColor = [[self neumorphicSurfaceColor] resolvedColorWithTraitCollection:tc];
+    bgConfig.strokeColor = UIColor.clearColor;
+    bgConfig.strokeWidth = 0.0;
+    cell.backgroundConfiguration = bgConfig;
 }
 
 + (void)applyNeumorphicCardStyleToView:(UIView *)view cornerRadius:(CGFloat)radius {
     if (!view) return;
-    view.backgroundColor = [self neumorphicSurfaceColor];
+    UITraitCollection *tc = [self ls_resolvedTraitCollectionForView:view];
+    view.backgroundColor = [[self neumorphicSurfaceColor] resolvedColorWithTraitCollection:tc];
     view.layer.cornerRadius = radius;
     view.layer.cornerCurve = kCACornerCurveContinuous;
     view.layer.borderWidth = 0.5;
-    view.layer.borderColor = [self neumorphicHighlightColor].CGColor;
-    view.layer.shadowColor = [self neumorphicShadowColor].CGColor;
+    view.layer.borderColor = [[self neumorphicHighlightColor] resolvedColorWithTraitCollection:tc].CGColor;
+    view.layer.shadowColor = [[self neumorphicShadowColor] resolvedColorWithTraitCollection:tc].CGColor;
     view.layer.shadowOffset = CGSizeMake(2.5, 3.5);
     view.layer.shadowRadius = 6.0;
     view.layer.shadowOpacity = 1.0;
     view.layer.masksToBounds = NO;
-    view.layer.shouldRasterize = YES;
-    view.layer.rasterizationScale = UIScreen.mainScreen.scale;
+    view.layer.shouldRasterize = NO;
 
     CALayer *highlightLayer = nil;
     if (view.layer.sublayers) {
@@ -266,12 +330,12 @@ static const CGFloat kLSMapHeight = 220.0;
         highlightLayer.cornerCurve = kCACornerCurveContinuous;
         highlightLayer.shadowOffset = CGSizeMake(-2.0, -2.5);
         highlightLayer.shadowRadius = 4.5;
-        highlightLayer.shadowOpacity = 0.85;
+        highlightLayer.shadowOpacity = 0.75;
         highlightLayer.masksToBounds = NO;
         highlightLayer.backgroundColor = UIColor.clearColor.CGColor;
         [view.layer insertSublayer:highlightLayer atIndex:0];
     }
-    highlightLayer.shadowColor = [self neumorphicHighlightColor].CGColor;
+    highlightLayer.shadowColor = [[self neumorphicHighlightColor] resolvedColorWithTraitCollection:tc].CGColor;
 
     if (view.bounds.size.width > 0 && view.bounds.size.height > 0) {
         [self updateNeumorphicShadowPathForView:view cornerRadius:radius];
@@ -295,14 +359,20 @@ static const CGFloat kLSMapHeight = 220.0;
 }
 
 + (void)refreshNeumorphicStyleForView:(UIView *)view cornerRadius:(CGFloat)radius {
+    [self refreshNeumorphicStyleForView:view cornerRadius:radius traitCollection:nil];
+}
+
++ (void)refreshNeumorphicStyleForView:(UIView *)view cornerRadius:(CGFloat)radius traitCollection:(nullable UITraitCollection *)traitCollection {
     if (!view) return;
-    view.backgroundColor = [self neumorphicSurfaceColor];
-    view.layer.borderColor = [self neumorphicHighlightColor].CGColor;
-    view.layer.shadowColor = [self neumorphicShadowColor].CGColor;
+    UITraitCollection *tc = traitCollection ?: [self ls_resolvedTraitCollectionForView:view];
+    view.layer.shouldRasterize = NO;
+    view.backgroundColor = [[self neumorphicSurfaceColor] resolvedColorWithTraitCollection:tc];
+    view.layer.borderColor = [[self neumorphicHighlightColor] resolvedColorWithTraitCollection:tc].CGColor;
+    view.layer.shadowColor = [[self neumorphicShadowColor] resolvedColorWithTraitCollection:tc].CGColor;
     if (view.layer.sublayers) {
         for (CALayer *sub in view.layer.sublayers) {
             if ([sub.name isEqualToString:@"LSNeumorphicHighlight"]) {
-                sub.shadowColor = [self neumorphicHighlightColor].CGColor;
+                sub.shadowColor = [[self neumorphicHighlightColor] resolvedColorWithTraitCollection:tc].CGColor;
                 break;
             }
         }
@@ -311,21 +381,103 @@ static const CGFloat kLSMapHeight = 220.0;
 }
 
 + (void)applyDebossedWellStyleToField:(UITextField *)field {
+    [self applyDebossedWellStyleToField:field traitCollection:nil];
+}
+
++ (void)applyDebossedWellStyleToField:(UITextField *)field traitCollection:(nullable UITraitCollection *)traitCollection {
     if (!field) return;
-    field.backgroundColor = [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
-        return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithRed:0.06 green:0.06 blue:0.08 alpha:0.95]
-            : [UIColor colorWithRed:0.87 green:0.89 blue:0.92 alpha:0.95];
-    }];
+    UITraitCollection *tc = traitCollection ?: [self ls_resolvedTraitCollectionForView:field];
+    BOOL isDark = (tc.userInterfaceStyle == UIUserInterfaceStyleDark);
+    field.backgroundColor = isDark
+        ? [UIColor colorWithRed:0.06 green:0.06 blue:0.08 alpha:0.95]
+        : [UIColor colorWithRed:0.89 green:0.91 blue:0.94 alpha:0.95];
+    field.textColor = [UIColor.labelColor resolvedColorWithTraitCollection:tc];
     field.layer.cornerRadius = 10.0;
     field.layer.cornerCurve = kCACornerCurveContinuous;
     field.layer.borderWidth = 0.5;
-    field.layer.borderColor = [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
-        return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithWhite:0.0 alpha:0.45]
-            : [UIColor colorWithRed:0.72 green:0.76 blue:0.82 alpha:0.60];
-    }].CGColor;
+    field.layer.borderColor = (isDark
+        ? [UIColor colorWithWhite:1.0 alpha:0.08]
+        : [UIColor colorWithRed:0.72 green:0.76 blue:0.82 alpha:0.65]).CGColor;
     field.clipsToBounds = YES;
+}
+
+static const NSInteger kLSButtonStackTag = 9901;
+static const NSInteger kLSButtonIconTag = 9902;
+static const NSInteger kLSButtonLabelTag = 9903;
+
++ (void)configureActionButton:(UIButton *)button
+                        title:(NSString *)title
+                   symbolName:(nullable NSString *)symbolName
+                   symbolSize:(CGFloat)symbolSize
+                         font:(UIFont *)font
+              foregroundColor:(UIColor *)fgColor {
+    if (!button) return;
+    [button setTitle:nil forState:UIControlStateNormal];
+    [button setImage:nil forState:UIControlStateNormal];
+    button.accessibilityLabel = title;
+
+    UIView *existing = [button viewWithTag:kLSButtonStackTag];
+    if (existing) {
+        [existing removeFromSuperview];
+    }
+
+    UITraitCollection *tc = [self ls_resolvedTraitCollectionForView:button];
+    UIColor *resolvedFG = [fgColor resolvedColorWithTraitCollection:tc];
+
+    UIStackView *stack = [[UIStackView alloc] init];
+    stack.tag = kLSButtonStackTag;
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    stack.axis = UILayoutConstraintAxisHorizontal;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = 8.0;
+    stack.userInteractionEnabled = NO;
+
+    if (symbolName.length > 0) {
+        UIImageSymbolConfiguration *symConfig = [UIImageSymbolConfiguration configurationWithPointSize:symbolSize weight:UIFontWeightBold];
+        UIImage *img = [self systemImageNamedWithFallback:symbolName configuration:symConfig];
+        if (img) {
+            UIImageView *iv = [[UIImageView alloc] initWithImage:[img imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
+            iv.tag = kLSButtonIconTag;
+            iv.translatesAutoresizingMaskIntoConstraints = NO;
+            iv.tintColor = resolvedFG;
+            iv.contentMode = UIViewContentModeScaleAspectFit;
+            [iv setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+            [stack addArrangedSubview:iv];
+        }
+    }
+
+    UILabel *lbl = [[UILabel alloc] init];
+    lbl.tag = kLSButtonLabelTag;
+    lbl.translatesAutoresizingMaskIntoConstraints = NO;
+    lbl.text = title;
+    lbl.font = font;
+    lbl.textColor = resolvedFG;
+    lbl.textAlignment = NSTextAlignmentCenter;
+    [stack addArrangedSubview:lbl];
+
+    [button addSubview:stack];
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.centerXAnchor constraintEqualToAnchor:button.centerXAnchor],
+        [stack.centerYAnchor constraintEqualToAnchor:button.centerYAnchor],
+        [stack.leadingAnchor constraintGreaterThanOrEqualToAnchor:button.leadingAnchor constant:12.0],
+        [stack.trailingAnchor constraintLessThanOrEqualToAnchor:button.trailingAnchor constant:-12.0]
+    ]];
+}
+
++ (void)refreshActionButton:(UIButton *)button
+            foregroundColor:(UIColor *)fgColor
+            traitCollection:(nullable UITraitCollection *)traitCollection {
+    if (!button) return;
+    UITraitCollection *tc = traitCollection ?: [self ls_resolvedTraitCollectionForView:button];
+    UIColor *resolvedFG = [fgColor resolvedColorWithTraitCollection:tc];
+    UIImageView *iv = (UIImageView *)[button viewWithTag:kLSButtonIconTag];
+    if ([iv isKindOfClass:[UIImageView class]]) {
+        iv.tintColor = resolvedFG;
+    }
+    UILabel *lbl = (UILabel *)[button viewWithTag:kLSButtonLabelTag];
+    if ([lbl isKindOfClass:[UILabel class]]) {
+        lbl.textColor = resolvedFG;
+    }
 }
 
 + (void)makeButtonTactileNeumorphic:(UIButton *)button
@@ -334,16 +486,18 @@ static const CGFloat kLSMapHeight = 220.0;
                         shadowColor:(UIColor *)shColor
                        cornerRadius:(CGFloat)radius {
     if (!button) return;
-    button.backgroundColor = baseColor;
+    UITraitCollection *tc = [self ls_resolvedTraitCollectionForView:button];
+    button.backgroundColor = [baseColor resolvedColorWithTraitCollection:tc];
     button.layer.cornerRadius = radius;
     button.layer.cornerCurve = kCACornerCurveContinuous;
     button.layer.borderWidth = 0.5;
-    button.layer.borderColor = hiColor.CGColor;
-    button.layer.shadowColor = shColor.CGColor;
+    button.layer.borderColor = [hiColor resolvedColorWithTraitCollection:tc].CGColor;
+    button.layer.shadowColor = [shColor resolvedColorWithTraitCollection:tc].CGColor;
     button.layer.shadowOffset = CGSizeMake(2.0, 3.5);
     button.layer.shadowRadius = 6.0;
     button.layer.shadowOpacity = 1.0;
     button.layer.masksToBounds = NO;
+    button.layer.shouldRasterize = NO;
     if (button.bounds.size.width > 0 && button.bounds.size.height > 0) {
         button.layer.shadowPath = [UIBezierPath bezierPathWithRoundedRect:button.bounds cornerRadius:radius].CGPath;
     }
@@ -382,56 +536,120 @@ static const CGFloat kLSMapHeight = 220.0;
 }
 
 - (void)refreshNeumorphicColors {
-    self.view.backgroundColor = [MapPickerViewController neumorphicBaseColor];
+    [self refreshNeumorphicColorsForTraitCollection:[self ls_effectiveTraitCollection]];
+}
+
+- (void)refreshNeumorphicColorsForTraitCollection:(UITraitCollection *)tc {
+    if (!tc) {
+        tc = [self ls_effectiveTraitCollection];
+    }
+    BOOL isDark = (tc.userInterfaceStyle == UIUserInterfaceStyleDark);
+    self.view.backgroundColor = [[MapPickerViewController neumorphicBaseColor] resolvedColorWithTraitCollection:tc];
+    self.tableView.separatorColor = [UIColor.separatorColor resolvedColorWithTraitCollection:tc];
 
     if (self.mapContainer) {
-        [MapPickerViewController refreshNeumorphicStyleForView:self.mapContainer cornerRadius:kLSCornerRadius];
+        [MapPickerViewController refreshNeumorphicStyleForView:self.mapContainer cornerRadius:kLSCornerRadius traitCollection:tc];
     }
     if (self.searchBar && self.searchBar.searchTextField) {
-        [MapPickerViewController applyDebossedWellStyleToField:self.searchBar.searchTextField];
+        [MapPickerViewController applyDebossedWellStyleToField:self.searchBar.searchTextField traitCollection:tc];
     }
+
+    UIColor *segBg = isDark
+        ? [UIColor colorWithRed:0.07 green:0.07 blue:0.09 alpha:0.95]
+        : [UIColor colorWithRed:0.86 green:0.88 blue:0.92 alpha:0.95];
+    UIColor *segThumb = isDark
+        ? [UIColor colorWithRed:0.20 green:0.20 blue:0.24 alpha:1.0]
+        : [UIColor colorWithWhite:1.0 alpha:0.98];
+    UIColor *segBorder = [[MapPickerViewController neumorphicHighlightColor] resolvedColorWithTraitCollection:tc];
+    UIColor *normalSegText = [UIColor.secondaryLabelColor resolvedColorWithTraitCollection:tc];
+    UIColor *selectedSegText = [UIColor.labelColor resolvedColorWithTraitCollection:tc];
+
     if (self.panelTabSegment) {
-        self.panelTabSegment.layer.borderColor = [MapPickerViewController neumorphicHighlightColor].CGColor;
+        self.panelTabSegment.backgroundColor = segBg;
+        self.panelTabSegment.selectedSegmentTintColor = segThumb;
+        self.panelTabSegment.layer.borderColor = segBorder.CGColor;
+        [self.panelTabSegment setTitleTextAttributes:@{
+            NSFontAttributeName: [UIFont systemFontOfSize:13.0 weight:UIFontWeightMedium],
+            NSForegroundColorAttributeName: normalSegText
+        } forState:UIControlStateNormal];
+        [self.panelTabSegment setTitleTextAttributes:@{
+            NSFontAttributeName: [UIFont systemFontOfSize:13.0 weight:UIFontWeightBold],
+            NSForegroundColorAttributeName: selectedSegText
+        } forState:UIControlStateSelected];
     }
     if (self.themeSegmentedControl) {
-        self.themeSegmentedControl.layer.borderColor = [MapPickerViewController neumorphicHighlightColor].CGColor;
+        self.themeSegmentedControl.backgroundColor = segBg;
+        self.themeSegmentedControl.selectedSegmentTintColor = segThumb;
+        self.themeSegmentedControl.layer.borderColor = segBorder.CGColor;
+        [self.themeSegmentedControl setTitleTextAttributes:@{
+            NSFontAttributeName: [UIFont systemFontOfSize:12.5 weight:UIFontWeightMedium],
+            NSForegroundColorAttributeName: normalSegText
+        } forState:UIControlStateNormal];
+        [self.themeSegmentedControl setTitleTextAttributes:@{
+            NSFontAttributeName: [UIFont systemFontOfSize:12.5 weight:UIFontWeightSemibold],
+            NSForegroundColorAttributeName: selectedSegText
+        } forState:UIControlStateSelected];
     }
 
-    if (self.heroStatusCell) [MapPickerViewController refreshNeumorphicStyleForView:self.heroStatusCell cornerRadius:16.0];
-    if (self.previewCell) [MapPickerViewController refreshNeumorphicStyleForView:self.previewCell cornerRadius:14.0];
-    if (self.latitudeCell) [MapPickerViewController refreshNeumorphicStyleForView:self.latitudeCell cornerRadius:14.0];
-    if (self.longitudeCell) [MapPickerViewController refreshNeumorphicStyleForView:self.longitudeCell cornerRadius:14.0];
-    if (self.altitudeCell) [MapPickerViewController refreshNeumorphicStyleForView:self.altitudeCell cornerRadius:14.0];
-    if (self.headingCell) [MapPickerViewController refreshNeumorphicStyleForView:self.headingCell cornerRadius:14.0];
-    if (self.fluctuationCell) [MapPickerViewController refreshNeumorphicStyleForView:self.fluctuationCell cornerRadius:14.0];
-    if (self.fluctuationRadiusCell) [MapPickerViewController refreshNeumorphicStyleForView:self.fluctuationRadiusCell cornerRadius:14.0];
-    if (self.keepLastSpoofCell) [MapPickerViewController refreshNeumorphicStyleForView:self.keepLastSpoofCell cornerRadius:14.0];
-    if (self.showRealLocationCell) [MapPickerViewController refreshNeumorphicStyleForView:self.showRealLocationCell cornerRadius:14.0];
-    if (self.themeSelectionCell) [MapPickerViewController refreshNeumorphicStyleForView:self.themeSelectionCell cornerRadius:14.0];
+    NSArray<UITableViewCell *> *groupedCells = @[
+        self.heroStatusCell ?: (id)NSNull.null,
+        self.previewCell ?: (id)NSNull.null,
+        self.latitudeCell ?: (id)NSNull.null,
+        self.longitudeCell ?: (id)NSNull.null,
+        self.altitudeCell ?: (id)NSNull.null,
+        self.headingCell ?: (id)NSNull.null,
+        self.fluctuationCell ?: (id)NSNull.null,
+        self.fluctuationRadiusCell ?: (id)NSNull.null,
+        self.keepLastSpoofCell ?: (id)NSNull.null,
+        self.showRealLocationCell ?: (id)NSNull.null,
+        self.themeSelectionCell ?: (id)NSNull.null
+    ];
+    for (id obj in groupedCells) {
+        if ([obj isKindOfClass:[UITableViewCell class]]) {
+            [MapPickerViewController applyGroupedCellStyleToCell:(UITableViewCell *)obj traitCollection:tc];
+        }
+    }
 
-    if (self.latitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.latitudeField];
-    if (self.longitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.longitudeField];
-    if (self.altitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.altitudeField];
+    if (self.latitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.latitudeField traitCollection:tc];
+    if (self.longitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.longitudeField traitCollection:tc];
+    if (self.altitudeField) [MapPickerViewController applyDebossedWellStyleToField:self.altitudeField traitCollection:tc];
 
     if (self.applyButton) {
+        self.applyButton.backgroundColor = [UIColor.systemBlueColor resolvedColorWithTraitCollection:tc];
         self.applyButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.35].CGColor;
         self.applyButton.layer.shadowColor = [UIColor colorWithRed:0.02 green:0.25 blue:0.65 alpha:0.45].CGColor;
+        [MapPickerViewController refreshActionButton:self.applyButton foregroundColor:UIColor.whiteColor traitCollection:tc];
         [MapPickerViewController updateNeumorphicShadowPathForView:self.applyButton cornerRadius:16.0];
     }
     if (self.stopButton) {
+        UIColor *red = [UIColor.systemRedColor resolvedColorWithTraitCollection:tc];
+        self.stopButton.backgroundColor = [red colorWithAlphaComponent:0.14];
         self.stopButton.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.20].CGColor;
         self.stopButton.layer.shadowColor = [UIColor colorWithRed:0.65 green:0.0 blue:0.0 alpha:0.35].CGColor;
+        [MapPickerViewController refreshActionButton:self.stopButton foregroundColor:UIColor.systemRedColor traitCollection:tc];
         [MapPickerViewController updateNeumorphicShadowPathForView:self.stopButton cornerRadius:14.0];
     }
     if (self.cancelButton) {
-        [MapPickerViewController refreshNeumorphicStyleForView:self.cancelButton cornerRadius:14.0];
+        [MapPickerViewController refreshNeumorphicStyleForView:self.cancelButton cornerRadius:14.0 traitCollection:tc];
+        [MapPickerViewController refreshActionButton:self.cancelButton foregroundColor:UIColor.secondaryLabelColor traitCollection:tc];
+    }
+    if (self.suggestionsPanel) {
+        self.suggestionsPanel.backgroundColor = isDark
+            ? [UIColor colorWithWhite:0.12 alpha:0.97]
+            : [UIColor colorWithWhite:1.0 alpha:0.97];
+        self.suggestionsPanel.layer.borderColor = [UIColor.separatorColor resolvedColorWithTraitCollection:tc].CGColor;
+    }
+    if (self.mapHintLabel) {
+        self.mapHintLabel.textColor = [UIColor.labelColor resolvedColorWithTraitCollection:tc];
+        self.mapHintLabel.backgroundColor = [[UIColor.secondarySystemBackgroundColor resolvedColorWithTraitCollection:tc] colorWithAlphaComponent:0.92];
     }
     if (self.statusPill) {
-        self.statusPill.layer.borderColor = [UIColor.separatorColor colorWithAlphaComponent:0.3].CGColor;
+        self.statusPill.layer.borderColor = [[UIColor.separatorColor resolvedColorWithTraitCollection:tc] colorWithAlphaComponent:0.3].CGColor;
+        [self refreshStatusPill];
     }
 
-    [self ls_refreshRouteNeumorphicStyles];
-    [self ls_refreshBookmarksNeumorphicStyles];
+    [self ls_refreshRouteNeumorphicStylesForTraitCollection:tc];
+    [self ls_refreshBookmarksNeumorphicStylesForTraitCollection:tc];
 }
 
 #pragma mark - Interface Setup
@@ -858,14 +1076,14 @@ static const CGFloat kLSMapHeight = 220.0;
     [self.showRealLocationSwitch addTarget:self action:@selector(handleShowRealLocationToggle) forControlEvents:UIControlEventValueChanged];
 
     // Action buttons
-    self.applyButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.applyButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.applyButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.applyButton setTitle:@"  Save Settings" forState:UIControlStateNormal];
-    [self.applyButton setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-    self.applyButton.titleLabel.font = [UIFont systemFontOfSize:17.0 weight:UIFontWeightBold];
-    UIImage *checkIcon = [MapPickerViewController systemImageNamedWithFallback:@"checkmark.circle.fill" configuration:[UIImageSymbolConfiguration configurationWithPointSize:18.0 weight:UIFontWeightBold]];
-    [self.applyButton setImage:checkIcon forState:UIControlStateNormal];
-    self.applyButton.tintColor = UIColor.whiteColor;
+    [MapPickerViewController configureActionButton:self.applyButton
+                                             title:@"Save Settings"
+                                        symbolName:@"checkmark.circle.fill"
+                                        symbolSize:18.0
+                                              font:[UIFont systemFontOfSize:17.0 weight:UIFontWeightBold]
+                                   foregroundColor:UIColor.whiteColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.applyButton
                                                baseColor:UIColor.systemBlueColor
                                           highlightColor:[UIColor colorWithWhite:1.0 alpha:0.35]
@@ -875,16 +1093,16 @@ static const CGFloat kLSMapHeight = 220.0;
     [self.applyButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
     [self.applyButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
-    self.stopButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.stopButton setTitle:@"  Stop Spoofing" forState:UIControlStateNormal];
-    [self.stopButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
-    self.stopButton.titleLabel.font = [UIFont systemFontOfSize:16.0 weight:UIFontWeightBold];
-    UIImage *stopIcon = [MapPickerViewController systemImageNamedWithFallback:@"stop.circle.fill" configuration:[UIImageSymbolConfiguration configurationWithPointSize:17.0 weight:UIFontWeightBold]];
-    [self.stopButton setImage:stopIcon forState:UIControlStateNormal];
-    self.stopButton.tintColor = UIColor.systemRedColor;
+    [MapPickerViewController configureActionButton:self.stopButton
+                                             title:@"Stop Spoofing"
+                                        symbolName:@"stop.circle.fill"
+                                        symbolSize:17.0
+                                              font:[UIFont systemFontOfSize:16.0 weight:UIFontWeightBold]
+                                   foregroundColor:UIColor.systemRedColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.stopButton
-                                               baseColor:[UIColor.systemRedColor colorWithAlphaComponent:0.12]
+                                               baseColor:[UIColor.systemRedColor colorWithAlphaComponent:0.14]
                                           highlightColor:[UIColor colorWithWhite:1.0 alpha:0.20]
                                              shadowColor:[UIColor colorWithRed:0.65 green:0.0 blue:0.0 alpha:0.35]
                                             cornerRadius:14.0];
@@ -892,11 +1110,14 @@ static const CGFloat kLSMapHeight = 220.0;
     [self.stopButton addTarget:self action:@selector(handleButtonTouchDown:) forControlEvents:UIControlEventTouchDown];
     [self.stopButton addTarget:self action:@selector(handleButtonTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel | UIControlEventTouchDragExit];
 
-    self.cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [self.cancelButton setTitleColor:UIColor.secondaryLabelColor forState:UIControlStateNormal];
-    self.cancelButton.titleLabel.font = [UIFont systemFontOfSize:16.0 weight:UIFontWeightMedium];
+    [MapPickerViewController configureActionButton:self.cancelButton
+                                             title:@"Cancel"
+                                        symbolName:nil
+                                        symbolSize:0.0
+                                              font:[UIFont systemFontOfSize:16.0 weight:UIFontWeightMedium]
+                                   foregroundColor:UIColor.secondaryLabelColor];
     [MapPickerViewController makeButtonTactileNeumorphic:self.cancelButton
                                                baseColor:[MapPickerViewController neumorphicSurfaceColor]
                                           highlightColor:[MapPickerViewController neumorphicHighlightColor]
@@ -928,9 +1149,8 @@ static const CGFloat kLSMapHeight = 220.0;
 - (void)buildStaticCells {
     // 0: Hero Status Card (Big Active / Inactive indicator & switch)
     self.heroStatusCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    self.heroStatusCell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     self.heroStatusCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.heroStatusCell cornerRadius:16.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.heroStatusCell traitCollection:[self ls_effectiveTraitCollection]];
 
     self.heroStatusSwitch = [[UISwitch alloc] init];
     [self.heroStatusSwitch addTarget:self action:@selector(handleHeroStatusSwitchToggled:) forControlEvents:UIControlEventValueChanged];
@@ -976,9 +1196,8 @@ static const CGFloat kLSMapHeight = 220.0;
 
     // 1: Target Coordinate Preview & Bookmark Cell
     self.previewCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    self.previewCell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     self.previewCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.previewCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.previewCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *previewBadge = [MapPickerViewController iconBadgeWithSymbolName:@"mappin.and.ellipse" backgroundColor:UIColor.systemRedColor];
     [self.previewCell.contentView addSubview:previewBadge];
@@ -1042,9 +1261,8 @@ static const CGFloat kLSMapHeight = 220.0;
 
     // 2: Heading Slider Cell
     self.headingCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    self.headingCell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     self.headingCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.headingCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.headingCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *headingBadge = [MapPickerViewController iconBadgeWithSymbolName:@"safari.fill" backgroundColor:UIColor.systemIndigoColor];
     [self.headingCell.contentView addSubview:headingBadge];
@@ -1100,9 +1318,8 @@ static const CGFloat kLSMapHeight = 220.0;
                                                              control:self.fluctuationSwitch];
 
     self.fluctuationRadiusCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    self.fluctuationRadiusCell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     self.fluctuationRadiusCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.fluctuationRadiusCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.fluctuationRadiusCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *radiusBadge = [MapPickerViewController iconBadgeWithSymbolName:@"circle.dashed" backgroundColor:[UIColor.systemPurpleColor colorWithAlphaComponent:0.75]];
     [self.fluctuationRadiusCell.contentView addSubview:radiusBadge];
@@ -1178,9 +1395,8 @@ static const CGFloat kLSMapHeight = 220.0;
     [self.themeSegmentedControl addTarget:self action:@selector(handleThemeChanged:) forControlEvents:UIControlEventValueChanged];
 
     self.themeSelectionCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    self.themeSelectionCell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     self.themeSelectionCell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:self.themeSelectionCell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:self.themeSelectionCell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *themeBadge = [MapPickerViewController iconBadgeWithSymbolName:@"circle.righthalf.filled" backgroundColor:UIColor.systemIndigoColor];
     [self.themeSelectionCell.contentView addSubview:themeBadge];
@@ -1188,8 +1404,11 @@ static const CGFloat kLSMapHeight = 220.0;
     UILabel *themeTitle = [[UILabel alloc] init];
     themeTitle.translatesAutoresizingMaskIntoConstraints = NO;
     themeTitle.text = @"Appearance";
-    themeTitle.font = [UIFont systemFontOfSize:16.0 weight:UIFontWeightRegular];
+    themeTitle.font = [UIFont systemFontOfSize:15.5 weight:UIFontWeightRegular];
     themeTitle.textColor = UIColor.labelColor;
+    themeTitle.adjustsFontSizeToFitWidth = YES;
+    themeTitle.minimumScaleFactor = 0.80;
+    [themeTitle setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     [self.themeSelectionCell.contentView addSubview:themeTitle];
 
     [self.themeSelectionCell.contentView addSubview:self.themeSegmentedControl];
@@ -1204,7 +1423,7 @@ static const CGFloat kLSMapHeight = 220.0;
 
         [self.themeSegmentedControl.trailingAnchor constraintEqualToAnchor:self.themeSelectionCell.contentView.trailingAnchor constant:-16.0],
         [self.themeSegmentedControl.centerYAnchor constraintEqualToAnchor:self.themeSelectionCell.contentView.centerYAnchor],
-        [self.themeSegmentedControl.widthAnchor constraintEqualToConstant:190.0],
+        [self.themeSegmentedControl.widthAnchor constraintEqualToConstant:164.0],
         [self.themeSegmentedControl.heightAnchor constraintEqualToConstant:32.0],
 
         [self.themeSelectionCell.contentView.heightAnchor constraintGreaterThanOrEqualToConstant:52.0]
@@ -1226,9 +1445,8 @@ static const CGFloat kLSMapHeight = 220.0;
                                                       title:(NSString *)title
                                                   textField:(UITextField *)textField {
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    cell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [MapPickerViewController applyNeumorphicCardStyleToView:cell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:cell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *badge = [MapPickerViewController iconBadgeWithSymbolName:symbol backgroundColor:color];
     [cell.contentView addSubview:badge];
@@ -1268,10 +1486,9 @@ static const CGFloat kLSMapHeight = 220.0;
                                                subtitle:(NSString *)subtitle
                                                 control:(UIControl *)control {
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    cell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.accessoryView = control;
-    [MapPickerViewController applyNeumorphicCardStyleToView:cell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:cell traitCollection:[self ls_effectiveTraitCollection]];
 
     UIView *badge = [MapPickerViewController iconBadgeWithSymbolName:symbol backgroundColor:color];
     [cell.contentView addSubview:badge];
@@ -1667,7 +1884,6 @@ static const CGFloat kLSMapHeight = 220.0;
         self.heroStatusTitleLabel.text = @"Spoofing Inactive";
         self.heroStatusSubtitleLabel.text = @"Using device native GPS · Toggle to activate";
     }
-    [self.applyButton setTitle:@"  Save Settings" forState:UIControlStateNormal];
 }
 
 - (void)handleHeroStatusSwitchToggled:(UISwitch *)sender {
@@ -1701,9 +1917,14 @@ static const CGFloat kLSMapHeight = 220.0;
 
 - (void)handleDarkModeToggled:(UISwitch *)sender {
     [PersistenceManager shared].appearancePreference = sender.isOn ? LSAppearancePreferenceDark : LSAppearancePreferenceLight;
-    self.overrideUserInterfaceStyle = sender.isOn ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
-    [self refreshNeumorphicColors];
-    [self.tableView reloadData];
+    UIUserInterfaceStyle targetStyle = sender.isOn ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+    self.overrideUserInterfaceStyle = targetStyle;
+    UITraitCollection *targetTraits = [UITraitCollection traitCollectionWithUserInterfaceStyle:targetStyle];
+    [self refreshNeumorphicColorsForTraitCollection:targetTraits];
+    [UIView performWithoutAnimation:^{
+        [self.tableView reloadData];
+        [self.tableView layoutIfNeeded];
+    }];
 }
 
 - (void)handleThemeChanged:(UISegmentedControl *)sender {
@@ -1714,17 +1935,26 @@ static const CGFloat kLSMapHeight = 220.0;
         pref = LSAppearancePreferenceDark;
     }
     [PersistenceManager shared].appearancePreference = pref;
+    self.darkModeSwitch.on = [PersistenceManager shared].isEffectiveDarkMode;
+    UIUserInterfaceStyle targetStyle = UIUserInterfaceStyleLight;
     if (@available(iOS 13.0, *)) {
         if (pref == LSAppearancePreferenceDark) {
-            self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+            targetStyle = UIUserInterfaceStyleDark;
         } else if (pref == LSAppearancePreferenceLight) {
-            self.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+            targetStyle = UIUserInterfaceStyleLight;
         } else {
-            self.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
+            targetStyle = (UIScreen.mainScreen.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark)
+                ? UIUserInterfaceStyleDark
+                : UIUserInterfaceStyleLight;
         }
+        self.overrideUserInterfaceStyle = targetStyle;
     }
-    [self refreshNeumorphicColors];
-    [self.tableView reloadData];
+    UITraitCollection *targetTraits = [UITraitCollection traitCollectionWithUserInterfaceStyle:targetStyle];
+    [self refreshNeumorphicColorsForTraitCollection:targetTraits];
+    [UIView performWithoutAnimation:^{
+        [self.tableView reloadData];
+        [self.tableView layoutIfNeeded];
+    }];
     UIImpactFeedbackGenerator *feedback = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
     [feedback impactOccurred];
 }
@@ -2152,13 +2382,17 @@ static const CGFloat kLSMapHeight = 220.0;
         self.statusDot.backgroundColor = active ? UIColor.systemGreenColor : UIColor.systemOrangeColor;
     }
 
+    UITraitCollection *tc = [self ls_effectiveTraitCollection];
+    BOOL isDark = (tc.userInterfaceStyle == UIUserInterfaceStyleDark);
     BOOL active = [[PersistenceManager shared] isSpoofingEnabled] || simulator.isSimulating;
     self.pillStopLabel.hidden = !active;
-    self.statusPill.backgroundColor = active ? [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull tc) {
-        return (tc.userInterfaceStyle == UIUserInterfaceStyleDark)
-            ? [UIColor colorWithRed:0.35 green:0.08 blue:0.08 alpha:0.85]
-            : [UIColor colorWithRed:1.0 green:0.88 blue:0.88 alpha:0.92];
-    }] : [UIColor.secondarySystemBackgroundColor colorWithAlphaComponent:0.92];
+    self.statusLabel.textColor = [UIColor.labelColor resolvedColorWithTraitCollection:tc];
+    self.pillStopLabel.textColor = [UIColor.systemRedColor resolvedColorWithTraitCollection:tc];
+    self.statusPill.backgroundColor = active
+        ? (isDark
+            ? [UIColor colorWithRed:0.35 green:0.08 blue:0.08 alpha:0.88]
+            : [UIColor colorWithRed:1.0 green:0.88 blue:0.88 alpha:0.94])
+        : [[UIColor.secondarySystemBackgroundColor resolvedColorWithTraitCollection:tc] colorWithAlphaComponent:0.94];
 
     BOOL showReal = [[PersistenceManager shared] isSpoofingEnabled] && (self.showRealLocationSwitch ? self.showRealLocationSwitch.isOn : [PersistenceManager shared].showRealLocation);
     self.mapView.showsUserLocation = ![[PersistenceManager shared] isSpoofingEnabled] || showReal;
@@ -2597,18 +2831,15 @@ static const CGFloat kLSMapHeight = 220.0;
         return;
     }
 
-    if (cell == self.applyButtonCell || cell == self.stopButtonCell || cell == self.cancelButtonCell) {
+    if (cell == self.applyButtonCell || cell == self.stopButtonCell || cell == self.cancelButtonCell ||
+        cell == self.routeGetDirectionsCell || cell == self.routePlaybackCell || cell == self.routeCancelCell) {
         cell.backgroundColor = UIColor.clearColor;
         cell.contentView.backgroundColor = UIColor.clearColor;
+        cell.backgroundConfiguration = [UIBackgroundConfiguration clearConfiguration];
         return;
     }
 
-    cell.backgroundColor = [MapPickerViewController liquidGlassCellBackgroundColor];
-    cell.contentView.backgroundColor = UIColor.clearColor;
-
-    if (cell.bounds.size.width > 0 && cell.bounds.size.height > 0) {
-        [MapPickerViewController updateNeumorphicShadowPathForView:cell cornerRadius:cell.layer.cornerRadius];
-    }
+    [MapPickerViewController applyGroupedCellStyleToCell:cell traitCollection:[self ls_effectiveTraitCollection]];
 }
 
 @end

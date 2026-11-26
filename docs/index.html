@@ -419,8 +419,52 @@
             border-color: #D1D1D6;
             color: #1C1C1E;
         }
+        .phone-screen.phone-light-theme .sim-pill {
+            background: rgba(0, 0, 0, 0.06);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #6E6E73;
+        }
+        .phone-screen.phone-light-theme .sim-popover {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: #D1D1D6;
+        }
+        .phone-screen.phone-light-theme .sim-popover button:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .phone-screen.phone-light-theme .sim-divider {
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        .phone-screen.phone-light-theme .sim-divider > * + * {
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        .phone-screen.phone-light-theme .ios-map-container {
+            background-color: #E5EAF0;
+            border-color: #D1D1D6;
+            background-image:
+                linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
+        .phone-screen.phone-light-theme .sim-map-hint {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #1C1C1E;
+        }
+        .phone-screen.phone-light-theme .sim-close-btn {
+            background: #E5E5EA;
+            border-color: #D1D1D6;
+            color: #6E6E73;
+        }
+        .phone-screen.phone-light-theme .sim-close-btn:hover {
+            color: #1C1C1E;
+        }
+        .phone-screen.phone-light-theme .sim-progress-track {
+            background: #E5E5EA;
+        }
         .phone-screen.phone-light-theme .sim-text-main {
             color: #1C1C1E;
+        }
+        .phone-screen.phone-light-theme .sim-text-muted {
+            color: #6E6E73;
         }
         .phone-screen.phone-light-theme .segment-pill {
             background: #FFFFFF;
@@ -428,6 +472,9 @@
         }
         .phone-screen.phone-light-theme .ios-segment-btn.active {
             color: #1C1C1E;
+        }
+        .phone-screen.phone-light-theme .ios-segment-btn:not(.active) {
+            color: #6E6E73;
         }
 
         /* FAQ Smooth Accordion (Principle 18: Fast Closing) */
@@ -527,7 +574,7 @@
             <a href="#" class="flex items-center gap-2.5 min-h-[44px]">
                 <img src="assets/icon.png" alt="LSpoof+" onerror="this.style.display='none'" class="w-6 h-6 rounded-md border border-hairline">
                 <span class="font-semibold text-sm tracking-tight text-white">LSpoof+</span>
-                <span class="text-xs font-mono text-neutral-500">v1.2.9</span>
+                <span class="text-xs font-mono text-neutral-500">v1.2.10</span>
             </a>
 
             <div class="flex items-center gap-2 sm:gap-5">
@@ -609,15 +656,15 @@
                                     <div class="flex items-start justify-between mb-2.5">
                                         <div>
                                             <div class="font-semibold text-base tracking-tight sim-text-main">Location Spoofer</div>
-                                            <div class="text-[11px] text-neutral-400">Hold 3 fingers to open or hide</div>
+                                            <div class="text-[11px] text-neutral-400 sim-text-muted">Hold 3 fingers to open or hide</div>
                                         </div>
-                                        <button onclick="showToast('Hold 3 fingers anywhere to reopen.')" aria-label="Close" class="hit-44 btn-tactile w-7 h-7 rounded-full sim-card border border-[#2A2A2E] bg-[#1C1D22] text-neutral-400 text-xs flex items-center justify-center hover:text-white">
+                                        <button onclick="showToast('Hold 3 fingers anywhere to reopen.')" aria-label="Close" class="hit-44 btn-tactile w-7 h-7 rounded-full sim-close-btn border border-[#2A2A2E] bg-[#1C1D22] text-neutral-400 text-xs flex items-center justify-center hover:text-white">
                                             &times;
                                         </button>
                                     </div>
 
                                     <!-- Status Pill -->
-                                    <div class="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-black/40 border border-white/5 font-mono text-[10px] text-neutral-400 mb-2.5">
+                                    <div class="sim-pill flex items-center justify-between px-2.5 py-1.5 rounded-md bg-black/40 border border-white/5 font-mono text-[10px] text-neutral-400 mb-2.5">
                                         <span id="telemetryStatus" class="text-iosGreen font-semibold transition-colors duration-150">ACTIVE</span>
                                         <span>ARM64 &bull; 16KB</span>
                                     </div>
@@ -627,7 +674,7 @@
                                         <span id="demoHeroDot" class="w-3 h-3 rounded-full bg-iosGreen flex-shrink-0"></span>
                                         <div class="flex-1 min-w-0">
                                             <div id="demoHeroTitle" class="text-xs font-semibold sim-text-main">Spoofing On</div>
-                                            <div id="demoHeroSub" class="text-[11px] text-neutral-400 truncate">Using your custom GPS pin</div>
+                                            <div id="demoHeroSub" class="text-[11px] text-neutral-400 sim-text-muted truncate">Using your custom GPS pin</div>
                                         </div>
                                         <div class="ios-switch on hit-44" id="demoHeroSwitch">
                                             <div class="ios-switch-knob"></div>
@@ -641,25 +688,25 @@
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                                 <span id="demoSearchText">Search city or coordinates</span>
                                             </span>
-                                            <span class="font-mono text-[9px] text-neutral-500">TAP</span>
+                                            <span class="font-mono text-[9px] text-neutral-500 sim-text-muted">TAP</span>
                                         </button>
 
-                                        <div id="demoSearchPopover" class="popover-panel origin-top absolute left-0 right-0 top-[40px] z-30 sim-card bg-[#1B1C22]/95 backdrop-blur-md border border-[#2F3038] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
+                                        <div id="demoSearchPopover" class="popover-panel origin-top absolute left-0 right-0 top-[40px] z-30 sim-popover sim-divider bg-[#1B1C22]/95 backdrop-blur-md border border-[#2F3038] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
                                             <button type="button" onclick="pickSearchCity('San Francisco', 37.774900, -122.419400, 50, 50)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
                                                 <span class="sim-text-main font-medium">San Francisco</span>
-                                                <span class="font-mono text-[10px] text-neutral-400">37.77, -122.42</span>
+                                                <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">37.77, -122.42</span>
                                             </button>
                                             <button type="button" onclick="pickSearchCity('Tokyo Tower', 35.658581, 139.745433, 76, 36)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
                                                 <span class="sim-text-main font-medium">Tokyo Tower</span>
-                                                <span class="font-mono text-[10px] text-neutral-400">35.66, 139.75</span>
+                                                <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">35.66, 139.75</span>
                                             </button>
                                             <button type="button" onclick="pickSearchCity('London Eye', 51.503324, -0.119543, 28, 30)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
                                                 <span class="sim-text-main font-medium">London Eye</span>
-                                                <span class="font-mono text-[10px] text-neutral-400">51.50, -0.12</span>
+                                                <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">51.50, -0.12</span>
                                             </button>
                                             <button type="button" onclick="pickSearchCity('Central Park, NY', 40.781200, -73.966500, 66, 68)" class="stagger-item w-full text-left px-3 py-2.5 hover:bg-white/5 flex items-center justify-between text-xs min-h-[40px]">
                                                 <span class="sim-text-main font-medium">Central Park, NY</span>
-                                                <span class="font-mono text-[10px] text-neutral-400">40.78, -73.97</span>
+                                                <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">40.78, -73.97</span>
                                             </button>
                                         </div>
                                     </div>
@@ -667,10 +714,10 @@
                                     <!-- Interactive Map (Click Arc + Drag with Rubber Banding) -->
                                     <div class="ios-map-container" id="demoMap">
                                         <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 152" fill="none">
-                                            <path d="M -20 38 Q 90 58 160 28 T 340 68" stroke="rgba(255,255,255,0.08)" stroke-width="5" stroke-linecap="round"/>
-                                            <path d="M 65 -10 L 95 160" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
-                                            <path d="M 225 -10 L 185 160" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
-                                            <path d="M 0 105 L 330 105" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+                                            <path d="M -20 38 Q 90 58 160 28 T 340 68" stroke="rgba(128,128,128,0.16)" stroke-width="5" stroke-linecap="round"/>
+                                            <path d="M 65 -10 L 95 160" stroke="rgba(128,128,128,0.12)" stroke-width="3.5"/>
+                                            <path d="M 225 -10 L 185 160" stroke="rgba(128,128,128,0.12)" stroke-width="3.5"/>
+                                            <path d="M 0 105 L 330 105" stroke="rgba(128,128,128,0.12)" stroke-width="3"/>
                                         </svg>
 
                                         <div class="map-drift-circle" id="demoDriftCircle"></div>
@@ -688,7 +735,7 @@
                                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
                                         </svg>
 
-                                        <div id="demoMapHint" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/85 border border-white/10 px-2.5 py-0.5 rounded-full font-mono text-[10px] text-neutral-300 whitespace-nowrap pointer-events-none">
+                                        <div id="demoMapHint" class="sim-map-hint absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/85 border border-white/10 px-2.5 py-0.5 rounded-full font-mono text-[10px] text-neutral-300 whitespace-nowrap pointer-events-none">
                                             Tap or drag pin
                                         </div>
                                     </div>
@@ -703,7 +750,7 @@
 
                                     <!-- Tab 1: Location -->
                                     <div id="phoneTabStatic" class="tab-panel space-y-2.5">
-                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
+                                        <div class="sim-card sim-divider bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
                                             <div class="px-3 py-2 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">Latitude</span>
                                                 <input id="demoLat" value="37.774900" readonly class="sim-well w-28 text-right font-mono text-[11px] bg-[#0D0E11] border border-white/5 rounded px-2 py-1 text-neutral-200 outline-none tabular">
@@ -714,7 +761,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
+                                        <div class="sim-card sim-divider bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
                                             <div onclick="toggleDemoFluctRow()" class="px-3 py-2 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">GPS Drift</span>
                                                 <div class="ios-switch on hit-44" id="demoFluctSwitch">
@@ -725,7 +772,7 @@
                                             <div id="demoSliderRow" class="px-3 py-2 space-y-1.5">
                                                 <div class="flex items-center justify-between">
                                                     <span class="text-xs sim-text-main">Drift Radius</span>
-                                                    <span id="demoRadiusVal" class="font-mono text-[11px] text-neutral-400 tabular">25 m</span>
+                                                    <span id="demoRadiusVal" class="font-mono text-[11px] text-neutral-400 sim-text-muted tabular">25 m</span>
                                                 </div>
                                                 <input type="range" min="5" max="150" value="25" oninput="updateDemoRadius(this.value)" class="w-full accent-[#BF5AF2] cursor-pointer h-1.5">
                                             </div>
@@ -753,14 +800,14 @@
 
                                     <!-- Tab 2: Route -->
                                     <div id="phoneTabRoute" class="tab-panel hidden space-y-2.5">
-                                        <div class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5 relative">
+                                        <div class="sim-card sim-divider bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5 relative">
                                             <div class="px-3 py-2.5 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">Start</span>
-                                                <span class="font-mono text-[11px] text-neutral-400">Union Square, SF</span>
+                                                <span class="font-mono text-[11px] text-neutral-400 sim-text-muted">Union Square, SF</span>
                                             </div>
                                             <div class="px-3 py-2.5 flex items-center justify-between">
                                                 <span class="text-xs sim-text-main">End</span>
-                                                <span class="font-mono text-[11px] text-neutral-400">Golden Gate Park</span>
+                                                <span class="font-mono text-[11px] text-neutral-400 sim-text-muted">Golden Gate Park</span>
                                             </div>
                                             <div onclick="toggleSpeedPopover(event)" class="px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[42px]">
                                                 <span class="text-xs sim-text-main">Speed</span>
@@ -768,28 +815,28 @@
                                             </div>
 
                                             <!-- Speed Picker Popover (Principles 11 & 18) -->
-                                            <div id="demoSpeedPopover" class="popover-panel origin-top-right absolute right-2 top-[110px] z-30 w-44 sim-card bg-[#202128]/95 backdrop-blur-md border border-[#34353E] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
+                                            <div id="demoSpeedPopover" class="popover-panel origin-top-right absolute right-2 top-[110px] z-30 w-44 sim-popover sim-divider bg-[#202128]/95 backdrop-blur-md border border-[#34353E] rounded-xl shadow-2xl overflow-hidden divide-y divide-white/5">
                                                 <button type="button" onclick="setDemoSpeed(0, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
                                                     <span class="sim-text-main">Walk</span>
-                                                    <span class="font-mono text-[10px] text-neutral-400">5 km/h</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">5 km/h</span>
                                                 </button>
                                                 <button type="button" onclick="setDemoSpeed(1, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
                                                     <span class="sim-text-main">Bike</span>
-                                                    <span class="font-mono text-[10px] text-neutral-400">15 km/h</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">15 km/h</span>
                                                 </button>
                                                 <button type="button" onclick="setDemoSpeed(2, event)" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between min-h-[38px]">
                                                     <span class="sim-text-main">Drive</span>
-                                                    <span class="font-mono text-[10px] text-neutral-400">60 km/h</span>
+                                                    <span class="font-mono text-[10px] text-neutral-400 sim-text-muted">60 km/h</span>
                                                 </button>
                                             </div>
                                         </div>
 
                                         <div id="demoRouteProgressBox" class="hidden sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl p-3 space-y-1.5">
-                                            <div class="flex justify-between font-mono text-[10px] text-neutral-400">
+                                            <div class="flex justify-between font-mono text-[10px] text-neutral-400 sim-text-muted">
                                                 <span>Moving along route</span>
                                                 <span id="demoRouteProgressPct" class="sim-text-main tabular">0%</span>
                                             </div>
-                                            <div class="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                                            <div class="sim-progress-track w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                                                 <div id="demoRouteProgressBar" class="w-0 h-full bg-iosGreen transition-all duration-75"></div>
                                             </div>
                                         </div>
@@ -801,26 +848,26 @@
 
                                     <!-- Tab 3: Saved (Staggered Cascade) -->
                                     <div id="phoneTabBookmarks" class="tab-panel hidden space-y-2.5">
-                                        <div class="font-mono text-[10px] text-neutral-400 px-1">SAVED PLACES</div>
-                                        <div id="bookmarksList" class="sim-card bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
+                                        <div class="font-mono text-[10px] text-neutral-400 sim-text-muted px-1">SAVED PLACES</div>
+                                        <div id="bookmarksList" class="sim-card sim-divider bg-[#1B1C20] border border-[#2A2B30] rounded-xl divide-y divide-white/5">
                                             <div onclick="selectBookmark('Apple Park', 37.334644, -122.008972, 24, 52)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Apple Park</div>
-                                                    <div class="text-[10px] text-neutral-400">Cupertino, CA</div>
+                                                    <div class="text-[10px] text-neutral-400 sim-text-muted">Cupertino, CA</div>
                                                 </div>
                                                 <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>
                                             <div onclick="selectBookmark('Tokyo Tower', 35.658581, 139.745433, 76, 36)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Tokyo Tower</div>
-                                                    <div class="text-[10px] text-neutral-400">Minato City, Tokyo</div>
+                                                    <div class="text-[10px] text-neutral-400 sim-text-muted">Minato City, Tokyo</div>
                                                 </div>
                                                 <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>
                                             <div onclick="selectBookmark('Times Square', 40.758896, -73.985131, 66, 68)" class="stagger-item btn-tactile px-3 py-2.5 flex items-center justify-between cursor-pointer min-h-[48px]">
                                                 <div>
                                                     <div class="text-xs font-medium sim-text-main">Times Square</div>
-                                                    <div class="text-[10px] text-neutral-400">New York, NY</div>
+                                                    <div class="text-[10px] text-neutral-400 sim-text-muted">New York, NY</div>
                                                 </div>
                                                 <span class="px-2.5 py-1 rounded bg-iosBlue text-white text-[10px] font-medium">Use</span>
                                             </div>

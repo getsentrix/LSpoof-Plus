@@ -23,6 +23,14 @@
 
 ---
 
+## What's New in v1.2.10
+
+- **Light & Dark Mode Polish**: Fixed stale cell backgrounds and overlapping shadow artifacts when switching Appearance live between System, Light, and Dark.
+- **Save Settings & Action Buttons**: Fixed invisible checkmark icon on Save Settings and centered icons across all action buttons.
+- **Appearance Row Layout**: Prevented "Appearance" label truncation on compact iPhone screens.
+
+---
+
 ## What's New in v1.2.9
 
 - **UX Motion & Responsiveness**: Snappier tactile button press/release springs, top-anchored search suggestion transitions, and faster dismiss timings.

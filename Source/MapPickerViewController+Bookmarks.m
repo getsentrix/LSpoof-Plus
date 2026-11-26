@@ -207,7 +207,7 @@ typedef NS_ENUM(NSInteger, LSBookmarksSection) {
     if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:kLSBookmarksCell];
     }
-    [MapPickerViewController applyNeumorphicCardStyleToView:cell cornerRadius:14.0];
+    [MapPickerViewController applyGroupedCellStyleToCell:cell traitCollection:[self ls_effectiveTraitCollection]];
 
     CLLocationCoordinate2D coordinate = kCLLocationCoordinate2DInvalid;
     NSString *title = @"Location";
@@ -283,11 +283,14 @@ typedef NS_ENUM(NSInteger, LSBookmarksSection) {
         content.imageProperties.tintColor = UIColor.systemYellowColor;
         cell.contentConfiguration = content;
 
-        UIButton *applyBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        UIButton *applyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         applyBtn.frame = CGRectMake(0, 0, 72, 32);
-        [applyBtn setTitle:@"Select" forState:UIControlStateNormal];
-        [applyBtn setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-        applyBtn.titleLabel.font = [UIFont systemFontOfSize:13.0 weight:UIFontWeightBold];
+        [MapPickerViewController configureActionButton:applyBtn
+                                                 title:@"Select"
+                                            symbolName:nil
+                                            symbolSize:0.0
+                                                  font:[UIFont systemFontOfSize:13.0 weight:UIFontWeightBold]
+                                       foregroundColor:UIColor.whiteColor];
         [MapPickerViewController makeButtonTactileNeumorphic:applyBtn
                                                    baseColor:UIColor.systemBlueColor
                                               highlightColor:[UIColor colorWithWhite:1.0 alpha:0.35]
@@ -433,6 +436,11 @@ typedef NS_ENUM(NSInteger, LSBookmarksSection) {
 }
 
 - (void)ls_refreshBookmarksNeumorphicStyles {
+    [self ls_refreshBookmarksNeumorphicStylesForTraitCollection:[self ls_effectiveTraitCollection]];
+}
+
+- (void)ls_refreshBookmarksNeumorphicStylesForTraitCollection:(nullable UITraitCollection *)traitCollection {
+    (void)traitCollection;
     if (self.panelTab == LSMapPickerPanelTabSaved) {
         [self.tableView reloadData];
     }
