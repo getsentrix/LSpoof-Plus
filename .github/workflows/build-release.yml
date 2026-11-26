@@ -69,19 +69,17 @@ jobs:
             if [[ "${{ github.ref }}" == refs/tags/* ]]; then
               TAG="${GITHUB_REF#refs/tags/}"
             else
-              TAG="v1.2.8"
+              TAG="v1.2.9"
             fi
           fi
           echo "Using tag: $TAG"
           cat << 'EOF' > notes.md
-          ## LSpoof+ v1.2.8
+          ## LSpoof+ v1.2.9
 
           ### What's New
-          - **Status Pill**: Added live status pill on map with tap-to-stop quick action.
-          - **Route Simulation**: Start marker stays fixed at start point with moving vehicle indicator along route.
-          - **Settings**: Fixed saving of 'Show Real Location' option.
-          - **Controls**: Restored stop and cancel buttons in location tab and cleaned up speed field toolbar.
-          - **3-Finger Gesture**: Hold three fingers anywhere on screen for 0.8 seconds to open the menu.
+          - **UX Motion & Responsiveness**: Snappier tactile button press/release springs, top-anchored search suggestion transitions, and faster dismiss timings (`0.13s`–`0.14s`).
+          - **Touch Targets**: Expanded close button hit target to `44x44`pt for easier one-handed dismissal.
+          - **Accessibility**: Respects iOS Reduce Motion (`UIAccessibilityIsReduceMotionEnabled`) across shakes, bounces, and spring transforms.
 
           ### Assets
           - `LocationSpoofer.dylib`: Dynamic library for LiveContainer, TrollStore, and Sideloadly (iOS 14.0+).

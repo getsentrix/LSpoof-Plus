@@ -23,6 +23,14 @@
 
 ---
 
+## What's New in v1.2.9
+
+- **UX Motion & Responsiveness**: Snappier tactile button press/release springs, top-anchored search suggestion transitions, and faster dismiss timings.
+- **Touch Targets**: Expanded close button hit target to `44x44`pt for easier dismissal.
+- **Reduce Motion Support**: Honors iOS Reduce Motion across shakes, bounces, and spring animations.
+
+---
+
 ## What's New in v1.2.8
 
 - **Status Pill**: Map status indicator with tap-to-stop action.
